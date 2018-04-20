@@ -1,6 +1,6 @@
 var mongoose = require( 'mongoose' );
 
-mongoose.connect( 'mongodb://localhost/repositorium' );
+mongoose.connect( 'mongodb://localhost/REpoUM' );
 
 var Log = mongoose.model( 'Log', new mongoose.Schema( {
     action: {
