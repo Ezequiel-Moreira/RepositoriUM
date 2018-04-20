@@ -1,17 +1,17 @@
 extends layout
 
 block content
-    form.w3-center(method="post" action="/login" style="max-width:300px; margin-right: auto; margin-left: auto")
+    form.w3-center(method="post" action="/login" style="max-width: 300px; margin-right: auto; margin-left: auto")
         if error
             div.w3-panel.w3-red
                 h3 Erro
                 p #{error}
 
         p
-            label Nome
+            label Nome 
             input.w3-input.w3-border(type="text" placeholder="Insira o seu nome..." name="username")
         p
-            label Password
+            label Password 
             input.w3-input.w3-border(type="password" placeholder="Insira a password..." name="password")
         p
             input.w3-button.w3-dark-grey(type="submit" value="Login")

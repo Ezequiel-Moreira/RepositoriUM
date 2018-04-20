@@ -1,5 +1,5 @@
 {
-  "name": "projeto",
+  "name": "prototype",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -10,8 +10,9 @@
     "cookie-parser": "~1.4.3",
     "debug": "~2.6.9",
     "express": "~4.15.5",
+    "express-formidable": "^1.0.0",
     "express-session": "^1.15.6",
-    "formidable": "^1.2.0",
+    "formidable": "^1.1.1",
     "mkdirp": "^0.5.1",
     "mongoose": "^5.0.9",
     "morgan": "~1.9.0",
@@ -21,11 +22,10 @@
     "pug": "2.0.0-beta11",
     "rmdir": "^1.2.0",
     "sanitize-filename": "^1.6.1",
-    "save-to": "^1.0.3",
     "serve-favicon": "~2.4.5",
     "uid-safe": "^2.1.5",
     "xml2js": "^0.4.19",
-    "xmllint": "^0.1.1",
+    "xmldoc": "^1.1.0",
     "yauzl": "^2.9.1",
     "yazl": "^2.4.3"
   }

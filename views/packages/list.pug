@@ -2,10 +2,10 @@ extends ../layout
 
 block content
     div.w3-center.w3-margin
-        a.w3-button.w3-green.w3-xlarge(href="/packages/submit")
-            i.fa.fa-upload
+        a.w3-button.w3-green.w3-xlarge(href="/packages/submit") 
+            i.fa.fa-upload 
             | Submeter Arquivo
-
+    
 
     div.w3-row-padding
         div.w3-container.w3-col.m4.l3
@@ -37,27 +37,28 @@ block content
             ul.w3-ul
                 each pkg in packages
                     li.w3-bar.w3-card-2.w3-white(style="margin:20px 0")
-                        span.w3-bar-item.w3-button.w3-right
-                            i.fa.fa-download
+                        a(href="/packages/" + pkg._id + "/download")
+                            span.w3-bar-item.w3-button.w3-right
+                                i.fa.fa-download
                         span.w3-bar-item.w3-text-grey.w3-xxxlarge
                             if pkg.approved
-                                i.fa.fa-globe
+                                i.fa.fa-globe 
                             else
                                 i.fa.fa-lock
                         div.w3-bar-item
                             a(href="/packages/" + pkg._id)
                                 span.w3-large #{pkg.meta.title}
                             p
-                                b Autores
+                                b Autores 
                                 each author, index in pkg.authors
                                     if index > 0
-                                        |,
+                                        |, 
                                     span.w3-text-grey #{author.name}
                             p
-                                b Supervisores
+                                b Supervisores 
                                 each supervisor, index in pkg.supervisors
                                     if index > 0
-                                        |,
+                                        |, 
                                     span.w3-text-grey #{supervisor.name}
 
     div
@@ -66,7 +67,7 @@ block content
                 a.w3-button.w3-left.w3-orange( href="/packages?page=" + ( currentPage - 1 ) ) Página Anterior
             else
                 a.w3-button.w3-left.w3-disabled Página Anterior
-
+            
             if hasNextPage
                 a.w3-button.w3-right.w3-orange( href="/packages?page=" + ( currentPage + 1 ) ) Página Seguinte
             else

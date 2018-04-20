@@ -10,7 +10,7 @@ function once ( fn ) {
 	return ( ...args ) => {
 		if ( !wasCalled ) {
 			wasCalled = true;
-
+			
 			return fn( ...args );
 		}
 	};
@@ -19,14 +19,14 @@ function once ( fn ) {
 class Compressed {
   	static saveTo ( stream, dest, callback ) {
         const writer = fs.createWriteStream( dest );
-
+        
       	stream.pipe( writer );
-
+        
       	writer.on( 'error', err => callback( err ) );
-
+      
       	writer.on( 'finish', () => callback( null ) );
     }
-
+  
   	static copyFile ( zipFile, entry, dest, callback ) {
         if ( entry.fileName.endsWith( '/' ) ) {
         	mkdirp( path.join( dest, entry.fileName ), callback );
@@ -40,13 +40,13 @@ class Compressed {
 					if ( err ) {
 						return callback( err );
 					}
-
+				  
 					Compressed.saveTo( stream, path.join( dest, entry.fileName ), callback );
 				} );
 			} );
         }
     }
-
+  
     static unzip ( zipFile, dest, callback ) {
 		callback = once( callback );
 
@@ -54,65 +54,68 @@ class Compressed {
             if ( err ) {
             	return callback( err );
             }
-
+            
           	zipFile.on( 'entry', entry => {
               	Compressed.copyFile( zipFile, entry, dest, ( err ) => {
                   	if ( err ) {
                       	zipFile.close();
-
+                      
                       	return callback( err );
                   	}
-
+                    
                   	zipFile.readEntry();
                 } );
             } );
-
+          	
             zipFile.on( 'error', err => callback( err ) );
-
+          
             zipFile.once( 'end', () => callback( null ) );
-
+              
             zipFile.readEntry();
-        } );
+        } );    
 	}
-
+	
 	static zip ( folder,callback ) {
-		var zipfile = new yazl.ZipFile();
-		// zipfile.addFile( "package.xml", "package.xml" );
-		// // (add only files, not directories)
-		// zipfile.addFile( "app.js", "app.js" );
-		// zipfile.addFile( "routes/index.js", "routes/index.js" );
-		// zipfile.addFile( "routes/users.js", "routes/users.js" );
-		// // pipe() can be called any time after the constructor
-		// zipfile.outputStream.pipe( fs.createWriteStream( "package.zip" ) ).on( "close", function () {
-		//     console.log( "done" );
-		// } );
-		// zipfile.end();
-		var fr = (files,index,current,callback)=>{
-			if(index>=files.length){return callback();}
-			var fp=path.join(current,files[index]);
-			fs.stat(fp,(error,file)=>{
-				if(error) return callback(error);
-				if(file.isFile()){
-					zipfile.addFile(fp,path.relative(folder,fp));
-					fr(files,index+1,current,callback);
-				}else{
-					fs.readdir(fp,(error,subfiles)=>{
-						fr(subfiles,0,fp,(error)=>{
-							if(error){
-								return callback(error);
-							}
-							fr(files,index+1,current,callback);
-						});
-					});
+		const zipfile = new yazl.ZipFile();
+		
+		const fr = ( files, index, current, callback ) => {
+			if ( index >= files.length ) {
+				return callback();
+			}
+
+			var fp = path.join( current, files[ index ] );
+
+			fs.stat( fp, ( error, file ) => {
+				if ( error ) {
+					return callback( error );
 				}
-			});
+
+				if( file.isFile() ) {
+					zipfile.addFile( fp, path.relative( folder, fp ) );
+					fr( files, index + 1, current, callback );
+				} else {
+					fs.readdir( fp, ( error, subfiles ) => {
+						fr( subfiles, 0, fp, ( error ) => {
+							if( error ) {
+								return callback( error );
+							}
+
+							fr( files, index + 1, current, callback );
+						} );
+					} );
+				}
+			} );
 		};
-		fs.readdir(folder,(error,files)=>{
-			fr(files,0,folder,(error)=>{
-				if(error){callback(error);}
-				callback(null,zipfile);
-			})
-		})
+
+		fs.readdir( folder, ( error, files ) => {			
+			fr( files, 0, folder, ( error ) => {
+				if ( error ) {
+					return callback( error );
+				}
+				
+				callback( null, zipfile );
+			} );
+		} );
 	}
 }
 
