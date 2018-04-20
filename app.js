@@ -14,8 +14,6 @@ var Login = require('./services/login.js');
 
 var app = express();
 
-//test
-
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
