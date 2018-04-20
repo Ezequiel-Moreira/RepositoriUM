@@ -1,0 +1,37 @@
+extends ../layout
+
+block content
+	// Vamos começar por mostrar a tabela
+	table.w3-table.w3-striped.w3-bordered.w3-border
+			// Table Row
+			tr.w3-text-red
+					// Table Header
+					th Message
+						th User
+					th Date
+			each log in logs
+					tr.w3-white
+							// Table cells
+							td #{log.action}
+							// E ja agora, para ele não dar erro nos logs se utilizador
+							if log.user
+									td #{log.user.name}
+							else
+									td <i>-</i>
+							td #{log.date}
+			else
+					tr
+							td <i>Sem logs</i>
+
+
+	div
+		p
+			if hasPreviousPage
+				a.w3-button.w3-left.w3-orange( href="/logs?page=" + ( currentPage - 1 ) ) Página Anterior
+			else
+				a.w3-button.w3-left.w3-disabled Página Anterior
+
+			if hasNextPage
+				a.w3-button.w3-right.w3-orange( href="/logs?page=" + ( currentPage + 1 ) ) Página Seguinte
+			else
+				a.w3-button.w3-right.w3-disabled Página Seguinte

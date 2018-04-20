@@ -1,0 +1,14 @@
+extends ../layout
+
+block content
+		p   Bem vindo utilizador #{user.username}
+		form(method="post" enctype="multipart/form-data" action="/packages/submit")
+				p
+						label Nome
+						input(type="text" placeholder="Insira o seu nome..." name="name")
+				p
+						label Ficheiro
+						input(type="file" placeholder="Insira o ficheiro..." name="file")
+
+				p
+						input(type="submit" value="Submeter Ficheiro")
