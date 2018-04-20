@@ -1,6 +1,7 @@
 var passport = require( 'passport' );
 var LocalStrategy = require( 'passport-local' ).Strategy;
 var { User } = require( './database' );
+var sha = require( 'sha.js' );
 
 class Login {
     static setup( passport ) {
@@ -34,7 +35,9 @@ class Login {
                     } );
                 }
 
-                if ( user.password !== password ) {
+                var hash = sha(  'sha256' ).update( user.salt + password ).digest( 'hex' );
+
+                if ( user.password !== hash ) {
                     return callback( null, false, {
                         message: 'Incorrect password.'
                     } );
