@@ -4,6 +4,7 @@ var { SubmissionInformationPackage } = require( '../services/sip' );
 var { Compressed } = require( '../services/compressed' );
 var { Logger } = require( '../services/logger' );
 var { Package } = require( '../services/database' );
+var {allowGroups}=require('../services/login');
 var multer = require( 'multer' );
 var rmdir = require( 'rmdir' );
 var fs = require( 'fs' );
@@ -67,17 +68,6 @@ router.get( '/', ( req, res, next ) => {
         } );
     } );
 } );
-
-
-function allowGroups ( groups ) {
-	return ( req, res, next ) => {
-    	if ( !req.user || groups.indexOf( req.user.group ) == -1 ) {
-        	next( new Error( 'Permission denied.' ) );
-        } else {
-        	next();
-        }
-    };
-}
 
 
 router.get( '/submit', allowGroups( [ 'producer', 'admin' ] ), ( req, res, next ) => {

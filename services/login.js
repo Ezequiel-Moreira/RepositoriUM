@@ -52,6 +52,16 @@ class Login {
     }
 }
 
+function allowGroups ( groups ) {
+	return ( req, res, next ) => {
+    	if ( !req.user || groups.indexOf( req.user.group ) == -1 ) {
+        	next( new Error( 'Permission denied.' ) );
+        } else {
+        	next();
+        }
+    };
+}
+
 module.exports = {
-    Login
+    Login,allowGroups
 };

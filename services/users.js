@@ -3,7 +3,7 @@ const uid = require( 'uid-safe' );
 const sha = require( 'sha.js' );
 
 class UsersManager {
-  	create ( username, password, group, callback ) {
+  	static create ( username, password, email, group, approved, callback ) {
       	User.find( { username: username }, ( err, users ) => {
           	if ( err ) {
               return callback( err );
@@ -13,34 +13,44 @@ class UsersManager {
             	return callback( new Error( 'Duplicated username: ' + username ) );
             }
 
-        	  const salt = uid.sync( 10 );
+        	const salt = uid.sync( 10 );
 
-            var hash = sha(  'sha256' ).update( user.salt + password ).digest( 'hex' );
+            var hash = sha( 'sha256' ).update( salt + password ).digest( 'hex' );
 
-            const new_user=new User({username:username,password:hash,group:group,salt:salt});
+            const user = new User( { username: username, email: email,password: hash, group: group, salt: salt ,approved: approved} );
 
-          	new_user.save( callback );
+          	user.save( callback );
         } );
     }
 
-    static update ( username, password, group, callback ) {
+    static update ( username, values, callback ) {
     	User.findOne( { username }, ( err, user ) => {
         	if ( err ) {
             	return callback( err );
             }
+
           	if ( !user ) {
             	return callback( new Error( 'Trying to update a non-existent user: ' + username ) );
             }
 
-            if ( password ) {
-            	const hash = sha( 'sha256' ).update( salt + password ).digest( 'hex' );
+            if ( 'password' in values ) {
+            	const hash = sha( 'sha256' ).update( user.salt + values.password ).digest( 'hex' );
 
               	user.password = hash;
             }
 
-            if( group ){
-              user.group=group;
+            if ( 'group' in values ) {
+              user.group = values.group;
             }
+
+            if('email' in values){
+            	user.email = values.email;
+            }
+
+            if('approved' in values){
+                user.approved=values.approved;
+            }
+
 
           	user.save( callback );
         } );
