@@ -56,3 +56,6 @@ class UsersManager {
         } );
     }
 }
+
+
+module.exports = { UsersManager };

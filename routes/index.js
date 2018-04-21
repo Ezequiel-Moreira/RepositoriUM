@@ -4,6 +4,7 @@ var fs = require( 'fs' );
 var path = require( 'path' );
 var { User,Log } = require( '../services/database' );
 var { Logger } = require( '../services/logger' );
+var {UsersManager} = require('../services/users');
 var passport = require( 'passport' );
 var Joi = require('joi');
 
