@@ -17,23 +17,23 @@ block content
 								input.w3-button.w3-grey.w3-right(type="submit" value="Procurar")
 
 				div.w3-container.w3-col.m8.l9
-						ul.w3-ul
-								each user in users
-										li.w3-bar.w3-card-2.w3-white(style="margin:20px 0")
-						if user.approved == false
-													a(href="/user/" + user._id + "/approve")
-															span.w3-bar-item.w3-button.w3-right
-																	i.fa.fa-check
-												span.w3-bar-item.w3-text-grey.w3-xxxlarge
-														if pkg.approved
-																i.fa.fa-check
-														else
-																i.fa.fa-lock
-												div.w3-bar-item
-														a(href="/users/" + user.username)
-																span.w3-large #{user.username} (#{user.group})
-														p
-																b Email #{user.email}
+					ul.w3-ul
+						each user in users
+							li.w3-bar.w3-card-2.w3-white(style="margin:20px 0")
+								if !user.approved
+									a(href="/user/" + user._id + "/approve")
+										span.w3-bar-item.w3-button.w3-right
+											i.fa.fa-check
+								span.w3-bar-item.w3-text-grey.w3-xxxlarge
+									if user.approved
+										i.fa.fa-check
+									else
+										i.fa.fa-lock
+								div.w3-bar-item
+									a(href="/users/" + user.username)
+										span.w3-large #{user.username} (#{user.group})
+									p
+										b Email #{user.email}
 
 		div
 				p

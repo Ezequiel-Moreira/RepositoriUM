@@ -1,8 +1,7 @@
-// routes/users.js
-
 var express = require('express');
 var router = express.Router();
-var { allowGroups } = require( '../services/login.js' )
+var { allowGroups } = require( '../services/login.js' );
+var {User}=require('../services/database.js');
 
 router.get('/', allowGroups( [ 'admin' ] ), (req, res, next) => {
 		const usersPerPage = 10;
@@ -21,5 +20,18 @@ router.get('/', allowGroups( [ 'admin' ] ), (req, res, next) => {
         } );
     } );
 } );
+
+router.get('/:username',allowGroups( [ 'admin' ] ),(req,res,next)=>{
+  User.findOne({username:req.params.username},(err,user)=>{
+    if(err){
+      return next(err);
+    }
+    if(user){
+      res.render('users/detailed',{
+        user:user
+      });
+    }
+  });
+});
 
 module.exports = router;
