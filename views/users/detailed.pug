@@ -1,14 +1,13 @@
 extends ../layout
 
 block content
-  p Username #{user.username}
-  p
-  p Email #{user.email}
-  p
-  p Password "Not shown for privacy reasons"
-  p
-  p salt "idem"
-  p
-  p group #{user.group}
-  p
-  p approved #{user.approved}
+  div.w3-row-padding
+    div.w3-container.w3-col.m8.l9
+      h2 #{user.username}
+
+      div.w3-text-black
+        h4  #{user.email}
+        div password: "Not shown for privacy reasons"
+        div salt: "idem"
+        div group: #{user.group}
+        div approved: #{user.approved}

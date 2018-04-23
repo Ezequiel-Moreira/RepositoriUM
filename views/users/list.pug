@@ -21,9 +21,12 @@ block content
 						each user in users
 							li.w3-bar.w3-card-2.w3-white(style="margin:20px 0")
 								if !user.approved
-									a(href="/user/" + user._id + "/approve")
+									a(href="/users/" + user.username + "/approve")
 										span.w3-bar-item.w3-button.w3-right
 											i.fa.fa-check
+									a(href="/users/"+user.username+"/remove")
+										span.w3-bar-item.w3-button.w3-right
+											i.fa.fa-minus-circle
 								span.w3-bar-item.w3-text-grey.w3-xxxlarge
 									if user.approved
 										i.fa.fa-check
@@ -36,13 +39,12 @@ block content
 										b Email #{user.email}
 
 		div
-				p
-						if hasPreviousPage
-								a.w3-button.w3-left.w3-orange( href="/users?page=" + ( currentPage - 1 ) ) Página Anterior
-						else
-								a.w3-button.w3-left.w3-disabled Página Anterior
-
-						if hasNextPage
-								a.w3-button.w3-right.w3-orange( href="/users?page=" + ( currentPage + 1 ) ) Página Seguinte
-						else
-								a.w3-button.w3-right.w3-disabled Página Seguinte
+			p
+				if hasPreviousPage
+					a.w3-button.w3-left.w3-orange( href=previousPageLink ) Página Anterior
+				else
+					a.w3-button.w3-left.w3-disabled Página Anterior
+				if hasNextPage
+					a.w3-button.w3-right.w3-orange( href=nextPageLink ) Página Seguinte
+				else
+					a.w3-button.w3-right.w3-disabled Página Seguinte
