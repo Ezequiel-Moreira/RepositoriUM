@@ -11,6 +11,7 @@ var fs = require( 'fs' );
 var uid = require( 'uid-safe' );
 var path = require( 'path' );
 var sanitize = require( 'sanitize-filename' );
+var Bagit = require('bagit-fs');
 
 var upload = multer( {
     dest: 'uploads/'
@@ -74,7 +75,7 @@ router.get( '/submit', allowGroups( [ 'producer', 'admin' ] ), ( req, res, next 
     res.render( 'packages/submit' );
 } );
 
-router.post( '/submit', upload.single( 'file' ), ( req, res, next ) => {
+router.post( '/submit', allowGroups( [ 'producer', 'admin' ] ), upload.single( 'file' ), ( req, res, next ) => {
     const id = uid.sync( 20 );
 
     const uploadFolder = 'uploads/unzipped/' + id;
@@ -87,7 +88,7 @@ router.post( '/submit', upload.single( 'file' ), ( req, res, next ) => {
             return next( err );
         }
 
-        SubmissionInformationPackage.validateMetadata( uploadFolder + '/package.xml', 'schema.xsd', ( err, errors ) => {
+        SubmissionInformationPackage.validateMetadata( uploadFolder + '/data/package.xml', 'schema.xsd', ( err, errors ) => {
             if ( err ) {
                 cleanup( req.file.path, uploadFolder );
 
@@ -102,68 +103,80 @@ router.post( '/submit', upload.single( 'file' ), ( req, res, next ) => {
                 } );
             }
 
-            SubmissionInformationPackage.parseMetadata( uploadFolder + '/package.xml', ( err, package ) => {
+            SubmissionInformationPackage.parseMetadata( uploadFolder + '/data/package.xml', ( err, package ) => {
                 if ( err ) {
                     cleanup( req.file.path, uploadFolder );
 
                     return next( err );
                 }
 
-                SubmissionInformationPackage.validateFiles( package.files, uploadFolder, ( err, missingFiles ) => {
-                    if ( err ) {
-                        cleanup( req.file.path, uploadFolder );
+              	var bag = Bagit( uploadFolder );
+
+              	bag.readManifest( ( err, entries ) => {
+                	if ( err ) {
+                    	cleanup( req.file.path, uploadFolder );
 
                         return next( err );
                     }
 
-                    if ( missingFiles.length ) {
-                        cleanup( req.file.path, uploadFolder );
+                  	const checksums = {};
 
-                        return res.render( 'submit-received', {
-                            errors: missingFiles
-                        } );
-                    }
+                  	for ( let entry of entries ) checksum[ entry.name ] = entry.checksum;
 
-                    SubmissionInformationPackage.moveFiles( package.files, uploadFolder, storageFolder, ( err ) => {
+                    SubmissionInformationPackage.validateFiles( checksums, package.files, uploadFolder + '/data', ( err, missingFiles ) => {
                         if ( err ) {
-                            cleanup( req.file.path, uploadFolder, storageFolder );
+                            cleanup( req.file.path, uploadFolder );
 
                             return next( err );
                         }
 
+                        if ( missingFiles.length ) {
+                            cleanup( req.file.path, uploadFolder );
 
-                      	new Package( {
-                          	// Isto expande o objecto package, ou seja, coloca todos os valores de package também aqui
-                        	...package,
-                          	folder: id,
-                          	approved: false,
-                          	approvedBy: null,
-                          	approvedAt: null,
-                          	createdBy: req.user.id
-                        } ).save( ( err, result ) => {
-                        	if ( err ) {
-                            	cleanup( req.file.path, uploadFolder, storageFolder );
+                            return res.render( 'submit-received', {
+                                errors: missingFiles
+                            } );
+                        }
 
-                              	return next( err );
+                        SubmissionInformationPackage.moveFiles( package.files, uploadFolder + '/data', storageFolder, ( err ) => {
+                            if ( err ) {
+                                cleanup( req.file.path, uploadFolder, storageFolder );
+
+                                return next( err );
                             }
 
-                        	Logger.write( 'Package submitted: ' + package.meta.title, req.user );
 
-                        	cleanup( req.file.path, uploadFolder );
+                            new Package( {
+                                ...package,
+                                folder: id,
+                                approved: false,
+                                approvedBy: null,
+                                approvedAt: null,
+                                createdBy: req.user.id
+                            } ).save( ( err, result ) => {
+                                if ( err ) {
+                                    cleanup( req.file.path, uploadFolder, storageFolder );
 
-                            res.render( 'submit-received', {
-                                name: req.body.name,
-                                file: req.file.originalname,
-                                package: package
+                                    return next( err );
+                                }
+
+                                Logger.write( 'Package submitted: ' + package.meta.title, req.user );
+
+                                cleanup( req.file.path, uploadFolder );
+
+                                res.render( 'submit-received', {
+                                    name: req.body.name,
+                                    file: req.file.originalname,
+                                    package: package
+                                } );
                             } );
                         } );
                     } );
-                } );
+            	} );
             } );
         } );
     } );
 } );
-
 router.get( '/:id', ( req, res, next ) => {
   Package.findById(req.params.id, ( err, package ) => {
     if ( err ) {
@@ -171,35 +184,18 @@ router.get( '/:id', ( req, res, next ) => {
     }
 
     const buildHtml = ( elem ) => {
-      // O nosso caso base tinha dois tipos: string | AbstractNode
-
       if ( typeof elem === 'string' ) {
         return elem;
       }
-      // agora faltam os atributos
-      // e depois alguns elementos (xref) que não sei como é que o professor os quer traduzir, mas isso
-      // depois temos de lhe perguntar
-
-      // Portanto lembraste que elem.attributes = { attr1: valor1, attr2: valor2, .... }, certo?
-      // E queremos traduzir isso em 'attr1="valor1" attr2="valor2"'
-      // Por isso para cada attributo geramos a string key="value" e juntamos com espaços
-      // certo?
-      //Penso que sim
-      // Object.keys retorna um array com as keys de um objeto
       const attributes = Object.keys( elem.attributes || {} )
       .map( key => key + '="' + elem.attributes[ key ] + '"' )
       .join( ' ' );
 
-      // Com as aspas e pelicas fica um pouco confuso, mas percebes mais ou menos o que está ali?
-      //percebo, não é complicado(estamos apenas a colocar as chaves, depois fazemos map para 'chave ='atributos de chave'' e depois juntamos tudo com espaços no meio)
-      // exato. Agora só temos de o inserir na tag
       return '<' + elem.type + ' ' + attributes + '>' + elem.body.map( buildHtml ).join( '' ) + '</' + elem.type + '>';
     };
 
     res.render( 'packages/detailed', {
       package: package,
-      // Para cada parágrafo vamos usar uma função recusriva que retorna uma string
-      // E depois juntamos dos os parágrafos com '\n'
       abstract: package.abstract.body.map( paragraph => buildHtml( paragraph ) ).join( '\n' )
     } );
   } );
