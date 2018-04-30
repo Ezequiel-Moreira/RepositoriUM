@@ -163,7 +163,7 @@ router.post( '/submit', allowGroups( [ 'producer', 'admin' ] ), upload.single( '
                                 Logger.write( 'Package submitted: ' + package.meta.title, req.user );
 
                                 cleanup( req.file.path, uploadFolder );
-
+                                console.log(package);
                                 res.render( 'submit-received', {
                                     name: req.body.name,
                                     file: req.file.originalname,
@@ -177,6 +177,7 @@ router.post( '/submit', allowGroups( [ 'producer', 'admin' ] ), upload.single( '
         } );
     } );
 } );
+
 router.get( '/:id', ( req, res, next ) => {
   Package.findById(req.params.id, ( err, package ) => {
     if ( err ) {
@@ -201,27 +202,108 @@ router.get( '/:id', ( req, res, next ) => {
   } );
 } );
 
-router.get( '/:id/download', ( req, res, next ) => {
-  Package.findById( req.params.id, ( err, package ) => {
-    if ( err ) {
-      return next( err );
-    }
+function readFolder ( folder, callback ) {
+    const filesList = [];
 
-    Compressed.zip( path.join( 'storage/packages/', package.folder ), ( err, zip ) => {
-      zip.addBuffer( new Buffer( SubmissionInformationPackage.buildMetadata( package ) ), 'package.xml' );
-
-      zip.end( size => {
-        if ( size > 0 ) {
-          res.set( 'Content-Length', size );
+    const fr = ( files, index, current, callback ) => {
+        if ( index >= files.length ) {
+            return callback( null, filesList );
         }
 
-        res.attachment( ( sanitize( package.meta.title ) || 'package' ) + '.zip' );
+        var fp = path.join( current, files[ index ] );
 
-        zip.outputStream.pipe( res );
-      } );
+        fs.stat( fp, ( error, file ) => {
+            if ( error ) {
+                return callback( error );
+            }
+
+            if( file.isFile() ) {
+                filesList.push( path.relative( folder, fp ) );
+                fr( files, index + 1, current, callback );
+            } else {
+                fs.readdir( fp, ( error, subfiles ) => {
+                    fr( subfiles, 0, fp, ( error ) => {
+                        if( error ) {
+                            return callback( error );
+                        }
+
+                        fr( files, index + 1, current, callback );
+                    } );
+                } );
+            }
+        } );
+    };
+
+    fs.readdir( folder, ( error, files ) => {
+        fr( files, 0, folder, callback );
     } );
-  } );
-} );
+}
 
+
+router.get( '/:id/download', ( req, res, next ) => {
+    Package.findById( req.params.id, ( err, package ) => {
+        if ( err ) {
+            return next( err );
+        }
+
+        const random = uid.sync( 20 );
+
+        const storageFolder = 'storage/bags/' + id;
+      	const packageFolder = path.join( 'storage/packages/', package.folder )
+
+      	const bag = BagIt( storageFolder );
+
+      	const addFileToBagit = ( files, index, callback ) => {
+          	if ( index >= files.length ) {
+            	callback( null );
+            }
+
+          	mkdirp( path.dirname( path.join( storageFolder, 'data', files[ index ] ) ), ( err ) => {
+              	if ( err ) {
+                  	return callback( err );
+                }
+
+                const writer = fs.createReadStream( path.join( packageFolder, files[ index ] ) )
+                    .pipe( bag.createWriteStream( files[ index ] ) );
+
+                writer.on( 'error', ( err ) => callback( err ) );
+
+                writer.on( 'finish', () => addFileToBagit( files, index + 1, callback ) );
+            } );
+        };
+
+        const files = readFolder( packageFolder, ( err, files ) => {
+          	if ( err ) {
+            	return next( err );
+            }
+
+        	addFileToBagit( files, 0, err => {
+                if ( err ) {
+                    return next( err );
+                }
+
+                bag.finalize( err => {
+                    if ( err ) {
+                        return next( err );
+                    }
+                    console.log(bag);
+                    Compressed.zip( storageFolder, ( err, zip ) => {
+                        zip.addBuffer( new Buffer( SubmissionInformationPackage.buildMetadata( package ) ), 'data/package.xml' );
+
+                        zip.end( size => {
+                            if ( size > 0 ) {
+                                res.set( 'Content-Length', size );
+                            }
+
+                            res.attachment( ( sanitize( package.meta.title ) || 'package' ) + '.zip' );
+
+                            zip.outputStream.pipe( res );
+                        } );
+                    } );
+                } );
+        	} );
+        } );
+    } );
+} );
 
 module.exports = router;
