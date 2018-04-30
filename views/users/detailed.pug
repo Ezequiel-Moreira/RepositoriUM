@@ -3,11 +3,9 @@ extends ../layout
 block content
   div.w3-row-padding
     div.w3-container.w3-col.m8.l9
-      h2 #{user.username}
+      h2 #{userDetails.username}
 
       div.w3-text-black
-        h4  #{user.email}
-        div password: "Not shown for privacy reasons"
-        div salt: "idem"
-        div group: #{user.group}
-        div approved: #{user.approved}
+        h4  #{userDetails.email}
+        div group: #{userDetails.group}
+        div approved: #{userDetails.approved}

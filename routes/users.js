@@ -50,7 +50,7 @@ router.get('/:username',allowGroups( [ 'admin' ] ),(req,res,next)=>{
     }
     if(user){
       res.render('users/detailed',{
-        user:user
+        userDetails:user
       });
     }else{
       next(new Error('User not found.'));
