@@ -11,7 +11,8 @@ var fs = require( 'fs' );
 var uid = require( 'uid-safe' );
 var path = require( 'path' );
 var sanitize = require( 'sanitize-filename' );
-var Bagit = require('bagit-fs');
+var BagIt = require('bagit-fs');
+var mkdirp=require('mkdirp');
 
 var upload = multer( {
     dest: 'uploads/'
@@ -121,7 +122,11 @@ router.post( '/submit', allowGroups( [ 'producer', 'admin' ] ), upload.single( '
 
                   	const checksums = {};
 
-                  	for ( let entry of entries ) checksum[ entry.name ] = entry.checksum;
+                  	for ( let entry of entries ) {
+                      if(entry.name && entry.name.startsWith('data/')){
+                        checksums[entry.name.slice('data/'.length)]=entry.checksum;
+                      }
+                    }
 
                     SubmissionInformationPackage.validateFiles( checksums, package.files, uploadFolder + '/data', ( err, missingFiles ) => {
                         if ( err ) {
@@ -248,7 +253,7 @@ router.get( '/:id/download', ( req, res, next ) => {
 
         const random = uid.sync( 20 );
 
-        const storageFolder = 'storage/bags/' + id;
+        const storageFolder = 'storage/bags/' + random;
       	const packageFolder = path.join( 'storage/packages/', package.folder )
 
       	const bag = BagIt( storageFolder );
@@ -272,9 +277,9 @@ router.get( '/:id/download', ( req, res, next ) => {
             } );
         };
 
-        const files = readFolder( packageFolder, ( err, files ) => {
+        readFolder( packageFolder, ( err, files ) => {
           	if ( err ) {
-            	return next( err );
+            	return next( err );const files = 
             }
 
         	addFileToBagit( files, 0, err => {
@@ -286,7 +291,7 @@ router.get( '/:id/download', ( req, res, next ) => {
                     if ( err ) {
                         return next( err );
                     }
-                    console.log(bag);
+
                     Compressed.zip( storageFolder, ( err, zip ) => {
                         zip.addBuffer( new Buffer( SubmissionInformationPackage.buildMetadata( package ) ), 'data/package.xml' );
 
