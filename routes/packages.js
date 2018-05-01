@@ -189,6 +189,9 @@ router.get( '/:id', ( req, res, next ) => {
       return next( err );
     }
 
+    package.visitsCount =(package.visitsCount||0)+1;
+    package.save();
+
     const buildHtml = ( elem ) => {
       if ( typeof elem === 'string' ) {
         return elem;
@@ -250,6 +253,9 @@ router.get( '/:id/download', ( req, res, next ) => {
         if ( err ) {
             return next( err );
         }
+
+        package.downloadsCount =(package.downloadsCount||0)+1;
+        package.save();
 
         const random = uid.sync( 20 );
 

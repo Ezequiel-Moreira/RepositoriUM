@@ -21,6 +21,11 @@ block content
                 i.fa.fa-download
                 | Descarregar
             div.w3-text-dark-grey
+                p <b>Downloads:</b> #{package.downloadsCount || 0}
+                p <b>Visits:</b> #{package.visitsCount||0}
+                p <b>Published in</b> #{package.createdAt}
+                if !package.approved
+                    p Este projeto ainda não foi aprovado
                 h4 Autores
                 each author in package.authors
                     p #{author.name}
