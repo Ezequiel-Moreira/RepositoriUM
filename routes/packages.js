@@ -260,7 +260,7 @@ router.get( '/:id/download', ( req, res, next ) => {
 
       	const addFileToBagit = ( files, index, callback ) => {
           	if ( index >= files.length ) {
-            	callback( null );
+            	return callback( null );
             }
 
           	mkdirp( path.dirname( path.join( storageFolder, 'data', files[ index ] ) ), ( err ) => {
@@ -279,7 +279,7 @@ router.get( '/:id/download', ( req, res, next ) => {
 
         readFolder( packageFolder, ( err, files ) => {
           	if ( err ) {
-            	return next( err );const files = 
+            	return next( err );
             }
 
         	addFileToBagit( files, 0, err => {
