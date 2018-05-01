@@ -3,6 +3,13 @@ extends ../layout
 block content
     div.w3-row-padding
         div.w3-container.w3-col.m8.l9
+            if !package.approved
+                div.w3-panel.w3-amber.w3-text-white.w3-center
+                    h3 Note
+                    p Este projeto ainda não foi aprovado
+                    if canApprove
+                          p
+                          a.w3-button.w3-orange.w3-hover-deep-orange( href="/packages/" + package._id + "/approve" ) Approve
             h2 #{package.meta.title}
 
             div !{abstract}
@@ -23,9 +30,8 @@ block content
             div.w3-text-dark-grey
                 p <b>Downloads:</b> #{package.downloadsCount || 0}
                 p <b>Visits:</b> #{package.visitsCount||0}
-                p <b>Published in</b> #{package.createdAt}
-                if !package.approved
-                    p Este projeto ainda não foi aprovado
+                p <b>Published in</b> #{format( package.createdAt, 'YYYY-MM-DD' )}
+
                 h4 Autores
                 each author in package.authors
                     p #{author.name}

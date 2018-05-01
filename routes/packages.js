@@ -13,6 +13,7 @@ var path = require( 'path' );
 var sanitize = require( 'sanitize-filename' );
 var BagIt = require('bagit-fs');
 var mkdirp=require('mkdirp');
+var { format } = require( 'date-fns' );
 
 var upload = multer( {
     dest: 'uploads/'
@@ -205,7 +206,9 @@ router.get( '/:id', ( req, res, next ) => {
 
     res.render( 'packages/detailed', {
       package: package,
-      abstract: package.abstract.body.map( paragraph => buildHtml( paragraph ) ).join( '\n' )
+      abstract: package.abstract.body.map( paragraph => buildHtml( paragraph ) ).join( '\n' ),
+      format: format,
+      canApprove: req.user && req.user.group=='admin'
     } );
   } );
 } );
@@ -247,6 +250,26 @@ function readFolder ( folder, callback ) {
     } );
 }
 
+router.get( '/:id/approve', allowGroups( [ 'admin' ] ), ( req, res, next ) => {
+	Package.findById( req.params.id, ( err, package ) => {
+      	if ( err ) {
+          	return next( err );
+        }
+      	if ( !package.approved ) {
+          	package.approved = true;
+          	package.approvedAt = new Date();
+          	package.approvedBy = req.user._id;
+
+          	package.save( ( err ) => {
+            	if ( err ) {
+                	return next( err );
+                }
+                const backUrl = req.header( 'Referer' ) || ( '/packages/' + package._id );
+                res.redirect( backUrl );
+            } );
+        }
+    } );
+} );
 
 router.get( '/:id/download', ( req, res, next ) => {
     Package.findById( req.params.id, ( err, package ) => {
