@@ -14,7 +14,7 @@ block content
             span.w3-bar-item.w3-button.w3-left   views
             span.w3-bar-item.w3-button.w3-left  downloads
             span.w3-bar-item.w3-button.w3-left  recent
-        div.w3-container.w3-col.m8.l9
+        div.w3-container.w3-col.m10.l12
           ul.w3-ul
             each pkg in packages
               li.w3-bar.w3-card-2.w3-white(style="margin:20px 0")
@@ -28,7 +28,7 @@ block content
                       i.fa.fa-lock
                 div.w3-bar-item
                   a(href="/packages/" + pkg._id)
-                      span.w3-large #{pkg.meta.title}
+                      span.w3-medium #{pkg.meta.title}
                   p
                       b Autores
                       each author, index in pkg.authors
