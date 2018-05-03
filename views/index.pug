@@ -7,13 +7,13 @@ block content
   else
     p Welcome to #{title}
 
+  li.w3-bar.w3-bottom
+    span.w3-bar-item.w3-left sort by:
+    a(href="/")
+      span.w3-bar-item.w3-button.w3-left.w3-green  views
+      span.w3-bar-item.w3-button.w3-left.w3-green  downloads
+      span.w3-bar-item.w3-button.w3-left.w3-green  recent
   div.w3-body.w3-margin
-        li.w3-bar.w3-bottom
-          span.w3-bar-item.w3-left sort by:
-          a(href="/")
-            span.w3-bar-item.w3-button.w3-left.w3-green  views
-            span.w3-bar-item.w3-button.w3-left.w3-green  downloads
-            span.w3-bar-item.w3-button.w3-left.w3-green  recent
         div.w3-container.w3-col.m10.l12
           ul.w3-ul
             each pkg in packages
