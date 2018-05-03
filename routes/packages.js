@@ -112,7 +112,7 @@ router.post( '/submit', allowGroups( [ 'producer', 'admin' ] ), upload.single( '
                     return next( err );
                 }
 
-              	var bag = Bagit( uploadFolder );
+              	var bag = BagIt( uploadFolder );
 
               	bag.readManifest( ( err, entries ) => {
                 	if ( err ) {
