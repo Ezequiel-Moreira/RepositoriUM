@@ -2,7 +2,7 @@ var express = require( 'express' );
 var router = express.Router();
 var fs = require( 'fs' );
 var path = require( 'path' );
-var { User,Log } = require( '../services/database' );
+var { User,Log,Package } = require( '../services/database' );
 var { Logger } = require( '../services/logger' );
 var {UsersManager} = require('../services/users');
 var passport = require( 'passport' );
@@ -30,16 +30,13 @@ function allowLoggedOut () {
 
 /* GET home page. */
 router.get( '/', function ( req, res, next ) {
-    fs.readFile( path.join( __dirname, '..', 'schema.xsd' ), 'utf8', ( err, contents ) => {
-        if ( err ) {
-            return next( err );
-        }
+    Package.find().exec((err,packages)=>{
+      res.render('index',{
+        title:'RepositoriUM',
+        packages: packages
+      });
+    });
 
-        res.render( 'index', {
-            title: 'Express',
-            schema: contents
-        } );
-    } );
 } );
 
 router.get( '/login', allowLoggedOut() ,( req, res, next ) => {
