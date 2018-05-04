@@ -33,10 +33,23 @@ router.get( '/', function ( req, res, next ) {
     Package.find().exec((err,packages)=>{
       res.render('index',{
         title:'RepositoriUM',
-        packages: packages
+        packages: packages,
+        tabs: [ {
+          title: 'Downloads',
+          name: 'downloads',
+          selected: true,
+          packages: packages
+        }, {
+          title: 'Views',
+          name: 'views',
+          packages: []
+        }, {
+          title: 'Recent',
+          name: 'Recent',
+          packages: []
+        } ]
       });
     });
-
 } );
 
 router.get( '/login', allowLoggedOut() ,( req, res, next ) => {

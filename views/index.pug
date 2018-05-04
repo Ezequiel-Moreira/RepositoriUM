@@ -1,43 +1,22 @@
 extends layout
+include packages/package-card
 
 block content
-  h1= title
-  if user
-    p Welcome to #{title}, #{user.username}
-  else
-    p Welcome to #{title}
+	h1= title
+	if user
+		p Welcome to #{title}, #{user.username}
+	else
+		p Welcome to #{title}
 
-  li.w3-bar.w3-bottom
-    span.w3-bar-item.w3-left sort by:
-    a(href="/")
-      span.w3-bar-item.w3-button.w3-left.w3-green  views
-      span.w3-bar-item.w3-button.w3-left.w3-green  downloads
-      span.w3-bar-item.w3-button.w3-left.w3-green  recent
-  div.w3-body.w3-margin
-        div.w3-container.w3-col.m10.l12
-          ul.w3-ul
-            each pkg in packages
-              li.w3-bar.w3-card-2.w3-white(style="margin:20px 0")
-                a(href="/packages/" + pkg._id + "/download")
-                  span.w3-bar-item.w3-button.w3-right
-                      i.fa.fa-download
-                span.w3-bar-item.w3-text-grey.w3-xxxlarge
-                  if pkg.approved
-                      i.fa.fa-globe
-                  else
-                      i.fa.fa-lock
-                div.w3-bar-item
-                  a(href="/packages/" + pkg._id)
-                      span.w3-medium #{pkg.meta.title}
-                  p
-                      b Autores
-                      each author, index in pkg.authors
-                          if index > 0
-                              |,
-                          span.w3-text-grey #{author.name}
-                  p
-                      b Supervisores
-                      each supervisor, index in pkg.supervisors
-                          if index > 0
-                              |,
-                          span.w3-text-grey #{supervisor.name}
+	div.w3-center
+		li.w3-bar
+			span.w3-bar-item.w3-left sort by:
+			each tab in tabs
+				span.w3-bar-item.w3-button.w3-left( id="tab-btn-" + tab.name class=tab.selected ? 'w3-green' : '' ) #{ tab.title }
+
+	div.w3-body.w3-margin
+				each tab in tabs
+					div.w3-container.w3-col.m10.l12( id="tab-body-" + tab.name class=tab.selected ? '' : 'w3-hide' )
+						ul.w3-ul
+							each pkg in packages
+								+package-card( pkg )
