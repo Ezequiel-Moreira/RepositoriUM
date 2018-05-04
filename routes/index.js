@@ -45,7 +45,7 @@ router.get( '/', function ( req, res, next ) {
           packages: []
         }, {
           title: 'Recent',
-          name: 'Recent',
+          name: 'recent',
           packages: []
         } ]
       });
