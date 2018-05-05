@@ -29,6 +29,26 @@ function cleanup( ...folders ) {
     }
 }
 
+function createRestrictionQuery ( user ) {
+  	if ( !user || user.group === 'consumer' ) {
+    	return { approved: true, state: 'public' };
+    }
+
+  	if ( user.group === 'admin' ) {
+    	return {};
+    }
+
+  	if ( user.group === 'producer' ) {
+      	return {
+        	$or: [
+                { approved: true, state: 'public' },
+          		  { approved: false, createdBy: user._id },
+          		  { state: 'private', createdBy: user._id }
+            ]
+        };
+    }
+}
+
 router.get( '/', ( req, res, next ) => {
 
     const packagesPerPage = 2;
@@ -40,6 +60,12 @@ router.get( '/', ( req, res, next ) => {
     const searchWaiting = req.query.waiting == 'on';
     const searchApproved = req.query.approved == 'on';
     const searchSort = req.query.sort || 'title';
+    const searchSortDirection = req.query.sortDirection == 'desc' ? 'desc' : 'asc';
+    const allowedSearchSort = [ 'title', 'approvedAt', 'createdAt', 'downloadsCount', 'visitsCount' ];
+
+    if ( !allowedSearchSort.includes( searchSort ) ) {
+        return next( new Error( `Invalid sort option.` ) );
+    }
 
     let query = {};
 
@@ -57,7 +83,9 @@ router.get( '/', ( req, res, next ) => {
         query.createdBy = req.user._id;
     }
 
-    Package.find( query ).sort( { [ searchSort ]: 'asc' } ).skip( currentPage * packagesPerPage ).limit( packagesPerPage ).exec( ( err, packages ) => {
+    const userCanSee = createRestrictionQuery( req.user );
+
+    Package.find( { $and: [ query, userCanSee ] } ).sort( { [ searchSort ]: searchSortDirection } ).skip( currentPage * packagesPerPage ).limit( packagesPerPage ).exec( ( err, packages ) => {
         if ( err ) {
             return next( err );
         }
@@ -201,7 +229,10 @@ router.post( '/submit', allowGroups( [ 'producer', 'admin' ] ), upload.single( '
 } );
 
 router.get( '/:id', ( req, res, next ) => {
-  Package.findOne({index:req.params.id}, ( err, package ) => {
+
+  const userCanSee = createRestrictionQuery( req.user );
+
+  Package.findOne({ $and: [ { index: req.params.id }, userCanSee ] }, ( err, package ) => {
     if ( err ) {
       return next( err );
     }
