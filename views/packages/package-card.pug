@@ -9,7 +9,7 @@ mixin package-card ( pkg )
 			else
 					i.fa.fa-lock
 		div.w3-bar-item
-			a(href="/packages/" + pkg._id)
+			a(href="/packages/" + pkg.index)
 					span.w3-medium #{pkg.meta.title}
 			p
 					b Autores

@@ -50,16 +50,22 @@ const Package = mongoose.model( 'Package', new mongoose.Schema( {
         path: String
     } ],
     folder: String,
+    state: { type: String, enum: [ 'public', 'private', 'deleted' ], default: 'public' },
     approved: { type: Boolean, default: () => false },
     approvedAt: Date,
     approvedBy: mongoose.Schema.Types.ObjectId,
     createdBy: mongoose.Schema.Types.ObjectId,
     createdAt: { type: Date, default: Date.now },
     downloadsCount:{type:Number,default:0},
-    visitsCount:{type:Number,default:0}
+    visitsCount:{type:Number,default:0},
+    index:{type:Number}
 } ).index( { name: 'text', 'meta.title': 'text' } ) );
 
+const Settings = mongoose.model( 'Settings', new mongoose.Schema( {
+	key: String,
+  	value: mongoose.Schema.Types.Mixed
+} ) );
 
 module.exports = {
-    Log, User, Package
+    Log, User, Package, Settings
 };
