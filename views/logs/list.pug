@@ -14,15 +14,14 @@ block content
 		else
 			tr
 				td(colspace=3) Sem logs
-	div
+	div.w3-clear
 		p
 			if hasPreviousPage
 				a.w3-button.w3-left.w3-orange( href="/logs?page=" + ( currentPage - 1 ) ) Página Anterior
 			else
 				a.w3-button.w3-left.w3-disabled Página Anterior
-			
+
 			if hasNextPage
 				a.w3-button.w3-right.w3-orange( href="/logs?page=" + ( currentPage + 1 ) ) Página Seguinte
 			else
 				a.w3-button.w3-right.w3-disabled Página Seguinte
-	

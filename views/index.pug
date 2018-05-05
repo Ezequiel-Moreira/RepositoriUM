@@ -22,10 +22,14 @@ block head
 				showTab( tab );
 		}
 
+		function setupEventHandlers () {
+			for ( let tab of allTabs ) {
+				$( '#tab-btn-' + tab ).on( 'click', () => selectTab( tab ) );
+			}
+		}
+
 		$( () => {
-				for ( let tab of allTabs ) {
-					$( "#tab-btn-" + tab ).on( 'click', () => selectTab( tab ) )
-				}
+			setupEventHandlers()
 		} );
 		var jQuery=$;
 
@@ -36,13 +40,18 @@ block content
 	else
 		p Welcome to #{title}
 
+	div
+		form.w3-flex(action="/packages" style="width=70%; margin-left: auto; margin-right: auto;")
+			input.w3-flex-grow.w3-input.w3-border( type="text" name="search" placeholder="Search packages..."  )
+			input.w3-flex-fixed.w3-button.w3-dark-grey( type="submit" value="Search" )
+
 	div.w3-center
-		li.w3-bar
+		ul
 			span.w3-bar-item.w3-left sort by:
 			each tab in tabs
 				span.w3-bar-item.w3-button.w3-left( id="tab-btn-" + tab.name class=tab.selected ? 'w3-green' : '' ) #{ tab.title }
 
-	div.w3-body.w3-margin
+	div.w3-row.w3-margin
 		each tab in tabs
 			div.w3-container.w3-col.m10.l12( id="tab-body-" + tab.name class=tab.selected ? '' : 'w3-hide' )
 				ul.w3-ul

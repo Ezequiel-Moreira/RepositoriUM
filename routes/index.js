@@ -28,29 +28,43 @@ function allowLoggedOut () {
   };
 }
 
+function loadPackages ( field, order, callback ) {
+	Package.find( { approved: true } ).sort( { [ field ]: order } ).limit( 10 ).exec( callback );
+}
+
 /* GET home page. */
 router.get( '/', function ( req, res, next ) {
-    Package.find().exec((err,packages)=>{
-      res.render('index',{
-        title:'RepositoriUM',
-        packages: packages,
-        tabs: [ {
-          title: 'Downloads',
-          name: 'downloads',
-          selected: true,
-          packages: packages
-        }, {
-          title: 'Views',
-          name: 'views',
-          packages: []
-        }, {
-          title: 'Recent',
-          name: 'recent',
-          packages: []
-        } ]
-      });
-    });
+  	loadPackages( 'downloadsCount', 'desc', ( err, packagesDownloads ) => {
+    	if ( err ) return next( err );
+
+      loadPackages( 'viewsCount', 'desc', ( err, packagesViews ) => {
+        if ( err ) return next( err );
+
+        loadPackages( 'createdAt', 'desc', ( err, packagesRecent ) => {
+          if ( err ) return next( err );
+
+          res.render('index',{
+            title:'RepositoriUM',
+            tabs: [ {
+              title: 'Downloads',
+              name: 'downloads',
+              selected: true,
+              packages: packagesDownloads
+            }, {
+              title: 'Views',
+              name: 'views',
+              packages: packagesViews
+            }, {
+              title: 'Recent',
+              name: 'recent',
+              packages: packagesRecent
+            } ]
+          });
+        } );
+      } );
+    } );
 } );
+
 
 router.get( '/login', allowLoggedOut() ,( req, res, next ) => {
     res.render( 'login', {
