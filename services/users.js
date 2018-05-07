@@ -51,7 +51,6 @@ class UsersManager {
                 user.approved=values.approved;
             }
 
-
           	user.save( callback );
         } );
     }

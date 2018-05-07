@@ -3,6 +3,7 @@ var router = express.Router();
 var qs = require( 'querystring' );
 var { allowGroups } = require( '../services/login.js' );
 var {User}=require('../services/database.js');
+var Joi = require('joi');
 
 router.get( '/', allowGroups( [ 'admin' ] ), ( req, res, next ) => {
 	const usersPerPage = 5;
@@ -42,6 +43,128 @@ router.get( '/', allowGroups( [ 'admin' ] ), ( req, res, next ) => {
 		} );
 	} );
 } );
+
+
+router.get( '/create', allowGroups( [ 'admin' ] ), ( req, res, next ) => {
+	res.render( 'users/edit', { userData: {} } );
+} );
+
+router.post( '/create', allowGroups( [ 'admin' ] ), ( req, res, next ) => {
+  	const errors = [];
+
+  	User.find( { $or: [ { username: req.body.username }, { email: req.body.email } ] }, ( err, users ) => {
+    	if ( users.find( user => user.username == req.body.username ) ) {
+            errors.push( 'Username already exists' );
+        }
+
+        if ( users.find( user => user.email == req.body.email ) ) {
+            errors.push( 'Email already exists' );
+        }
+
+      	const schema = Joi.object().keys( {
+        	username: Joi.string().alphanum().min( 6 ).max( 16 ).required(),
+          	password: Joi.string().min( 6 ).max( 20 ).required(),
+          	password_confirm: Joi.any().equal( Joi.ref( 'password' ) ).required(),
+          	email: Joi.string().email().required(),
+          	group: Joi.string().valid( 'admin', 'producer', 'consumer' )
+        } );
+
+      	var validation = Joi.validate( req.body, schema, { abortEarly: false } );
+
+        if ( validation.error ) {
+            errors.push( ...validation.error.details.map( err => err.message ) );
+        }
+
+        if ( errors.length > 0 ) {
+            res.render( 'users/edit', {
+                errors,
+                userData: req.body
+            } );
+        } else {
+            UsersManager.create( req.body.username, req.body.password, req.body.email, req.body.group, true, ( err, user ) => {
+                if ( err ) {
+                    return next( err );
+                }
+                res.redirect( '/users/' + user._id );
+            } );
+        }
+    } );
+} );
+
+
+router.get('/:id/edit',allowGroups(['admin']),(req,res,next)=>{
+	User.findOne( { username: req.params.id }, ( err, user ) => {
+    	if ( err ) {
+        	return next( err );
+        }
+
+				if ( user == null ) {
+        	return next( new Error( 'User not found.' ) );
+        }
+
+    	res.render('users/edit',{userData: user});
+    } )
+});
+
+router.post('/:id/edit',allowGroups(['admin']),(req,res,next)=>{
+	User.findOne({username:req.params.id},(err,user)=>{
+    if(err){
+			return next(err);
+		}
+
+		if ( user == null ) {
+			return next( new Error( 'User not found.' ) );
+		}
+		const errors = [];
+
+  	User.find( { $or: [ { username: req.body.username }, { email: req.body.email } ] }, ( err, users ) => {
+
+				if ( users.find( u => u._id != user._id && u.username == req.body.username ) ) {
+            errors.push( 'Username already exists' );
+        }
+
+        if ( users.find( u => u._id != user._id && u.email == req.body.email ) ) {
+            errors.push( 'Email already exists' );
+        }
+
+				const schema = Joi.object().keys( {
+        	username: Joi.string().alphanum().min( 6 ).max( 16 ).required(),
+        	password: Joi.string().min( 6 ).max( 20 ).allow(''),
+        	password_confirm: Joi.any().equal( Joi.ref( 'password' ) ),
+        	email: Joi.string().email().required(),
+        	group: Joi.string().valid( 'admin', 'producer', 'consumer' )
+        } ).with( 'password', 'password_confirm' );
+
+      	var validation = Joi.validate( req.body, schema, { abortEarly: false } );
+
+
+        if ( validation.error ) {
+            errors.push( ...validation.error.details.map( err => err.message ) );
+        }
+
+				if ( errors.length > 0 ) {
+            res.render( 'users/edit', {
+                errors,
+                userData: req.body
+            } );
+        } else {
+					  const updated = { ...req.body };
+
+            if ( !req.body.password ) delete updated.password;
+
+            if ( req.body.approved == 'on' ) updated.approved = true;
+            else delete updated.approved;
+            UsersManager.update( req.body.id, req.body, ( err, user ) => {
+                if ( err ) {
+                    return next( err );
+                }
+								console.log("hey listen!");
+                res.redirect( '/users/' + user.username );
+            } );
+        }
+    } );
+	})
+});
 
 router.get('/:username',allowGroups( [ 'admin' ] ),(req,res,next)=>{
   User.findOne({username:req.params.username},(err,user)=>{
@@ -108,7 +231,5 @@ router.get( '/:name/remove', allowGroups( [ 'admin' ] ), ( req, res, next ) => {
 		}
 	} );
 } );
-
-
 
 module.exports = router;
