@@ -22,7 +22,8 @@ const User = mongoose.model( 'User', new mongoose.Schema( {
     password: String,
     salt: String,
     group: String,
-  	approved: Boolean
+  	approved: Boolean,
+    deleted: {type:Boolean,default:()=> false}
 } ) );
 
 const Package = mongoose.model( 'Package', new mongoose.Schema( {

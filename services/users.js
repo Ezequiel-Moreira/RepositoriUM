@@ -33,6 +33,10 @@ class UsersManager {
             	return callback( new Error( 'Trying to update a non-existent user: ' + username ) );
             }
 
+            if('username' in values){
+              user.username=values.username;
+            }
+
             if ( 'password' in values ) {
             	const hash = sha( 'sha256' ).update( user.salt + values.password ).digest( 'hex' );
 

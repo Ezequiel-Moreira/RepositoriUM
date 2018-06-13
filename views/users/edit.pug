@@ -2,9 +2,10 @@ extends ../layout
 
 block content
 	if userData._id
-		-var url = "/users/" + userData.username + "/edit"
+		- var url = "/users/" + userData.username + "/edit"
 	else
-		-var url = "users/register"
+		- var url = "/users/create"
+
 	form.w3-center(method="post" action=url style="max-width: 400px; margin-right: auto; margin-left: auto")
 		if errors
 			each error in errors
@@ -28,18 +29,21 @@ block content
 			p
 				label Email
 				input.w3-input.w3-border(type="text" placeholder="Insira o email..." name="email" value=userData.email)
+
 			p
+				label Grupo
 				select.w3-select(name="group")
 					option(value="admin" selected=userData.group == "admin") Administrator
 					option(value="producer" selected=userData.group == "producer") Producer
 					option(value="consumer" selected=!userData.group || userData.group == "consumer") Consumer
+
 			if userData._id && !userData.approved
 				p
 					input.w3-check(type="checkbox" name="approved")
 					label Approved
 
 			p
-					if userData.username
-						input.w3-button.w3-dark-grey(type="submit" value="Create")
-					else
-						input.w3-button.w3-light-blue(type="submit" value="Update")
+				if userData._id
+					input.w3-button.w3-light-blue(type="submit" value="Update")
+				else
+					input.w3-button.w3-dark-grey(type="submit" value="Create")
