@@ -1,47 +1,64 @@
 extends ../layout
 
 block content
-    div.w3-row-padding
-        div.w3-container.w3-col.m8.l9
-            if !package.approved
-                div.w3-panel.w3-amber.w3-text-white.w3-center
-                    h3 Note
-                    p Este projeto ainda não foi aprovado
-                    if canApprove
-                          p
-                          a.w3-button.w3-orange.w3-hover-deep-orange( href="/packages/" + package._id + "/approve" ) Approve
-            h2 #{package.meta.title}
+		div.w3-row-padding
+				div.w3-container.w3-col.m8.l9
+						if !package.approved
+								div.w3-panel.w3-amber.w3-text-white.w3-center
+										h3 Note
+										p Project waiting for approval
+										if canApprove
+												p
+														a.w3-button.w3-orange.w3-hover-deep-orange( href='/packages/' + package._id + '/approve' ) Approve
 
-            div !{abstract}
+						h2 <span class="w3-text-grey">##{package.index}</span> #{package.meta.title}
 
-            div
-                h3 Ficheiros
-                ul.w3-ul.w3-card-2.w3-white
-                    each file in package.files
-                        li
-                            div.w3-bar-item
-                                p.w3-large(style="margin-top: 0px") #{file.path}
-                                span #{file.description}
+						div !{abstract}
 
-        div.w3-container.w3-col.m4.l3
-            a.w3-button.w3-green.w3-xlarge.w3-block(href='/packages/' + package._id + '/download')
-                i.fa.fa-download
-                | Descarregar
-            div.w3-text-dark-grey
-                p <b>Downloads:</b> #{package.downloadsCount || 0}
-                p <b>Visits:</b> #{package.visitsCount||0}
-                p <b>Published in</b> #{format( package.createdAt, 'YYYY-MM-DD' )}
+						div.w3-section.w3-padding-small
+								h3 Ficheiros
+								ul.w3-ul.w3-card-2.w3-white
+										each file in package.files
+												li
+														div.w3-bar-item
+																p.w3-large(style="margin-top: 0px") #{file.path}
+																span #{file.description}
 
-                h4 Autores
-                each author in package.authors
-                    p #{author.name}
-                else
-                    p
-                        i Sem autores
+				div.w3-container.w3-col.m4.l3
+						a.w3-button.w3-green.w3-xlarge.w3-block.w3-section(href='/packages/' + package._id + '/download')
+								i.fa.fa-download
+								| Descarregar
+						div.w3-text-dark-grey
+								div.w3-section.w3-padding-small
+										p <b>Downloads:</b> #{package.downloadsCount || 0}
+										p <b>Views:</b> #{package.visitsCount||0}
+										p <b>Published in</b> #{format( package.createdAt, 'YYYY-MM-DD' )}
 
-                h4 Supervisores
-                each supervisor in package.supervisors
-                    p #{supervisor.name}
-                else
-                    p
-                        i Sem supervisores
+								div.w3-section.w3-padding-small
+										h4 Autores
+										each author in package.authors
+												p #{author.name}
+										else
+												p
+														i Sem autores
+
+								div.w3-section.w3-padding-small
+										h4 Supervisores
+										each supervisor in package.supervisors
+												p #{supervisor.name}
+										else
+												p
+														i Sem supervisores
+
+				if user && user.group == 'admin'
+								if package.state == 'deleted'
+									a.w3-button.w3-orange.w3-xlarge.w3-block.w3-section(href='/packages/' + package._id + '/recover/public')
+											i.fa.fa-undo
+											|  Recover Public
+									a.w3-button.w3-orange.w3-xlarge.w3-block.w3-section(href='/packages/' + package._id + '/recover/private')
+											i.fa.fa-undo
+											|  Recover Private
+								else
+									a.w3-button.w3-red.w3-xlarge.w3-block.w3-section(href='/packages/' + package._id + '/remove')
+											i.fa.fa-minus
+											|  Remove

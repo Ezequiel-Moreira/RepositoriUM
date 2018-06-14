@@ -279,9 +279,16 @@ router.get( '/:username', allowGroups( [ 'admin' ] ), ( req, res, next ) => {
 			return next( new Error( 'User not found.' ) );
 		}
 
-		res.render( 'users/detailed', {
-			userDetails: user
-		} );
+      	Package.find( { createdBy: user._id }, ( err, packages ) => {
+          	if ( err ) {
+            	return next( err );
+            }
+
+          	res.render( 'users/detailed', {
+                userDetails: user,
+              	packages: packages
+            } );
+        } );
 	} );
 } );
 

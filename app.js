@@ -6,6 +6,7 @@ var cookieParser = require( 'cookie-parser' );
 var bodyParser = require( 'body-parser' );
 var passport = require( 'passport' );
 // var formidable = require( 'express-formidable' );
+var format=require('date-fns');
 
 var index = require( './routes/index' );
 var users = require( './routes/users' );
@@ -44,6 +45,7 @@ app.use( passport.session() );
 
 app.use( ( req, res, next ) => {
     res.locals.user = req.user;
+    res.locals.format = format;
 
     next();
   } );

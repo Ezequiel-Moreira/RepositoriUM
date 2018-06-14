@@ -3,16 +3,17 @@ var router = express.Router();
 var { SubmissionInformationPackage } = require( '../services/sip' );
 var { Compressed } = require( '../services/compressed' );
 var { Logger } = require( '../services/logger' );
-var { Package,Settings } = require( '../services/database' );
-var {allowGroups}=require('../services/login');
+var { Package, Settings , User } = require( '../services/database' );
+var { allowGroups } = require( '../services/login' );
 var multer = require( 'multer' );
 var rmdir = require( 'rmdir' );
 var fs = require( 'fs' );
 var uid = require( 'uid-safe' );
 var path = require( 'path' );
 var sanitize = require( 'sanitize-filename' );
-var BagIt = require('bagit-fs');
-var mkdirp=require('mkdirp');
+var BagIt = require( 'bagit-fs' );
+var readFolder = require( '../services/readFolder' );
+var mkdirp = require( 'mkdirp' );
 var { format } = require( 'date-fns' );
 
 var upload = multer( {
@@ -30,28 +31,29 @@ function cleanup( ...folders ) {
 }
 
 function createRestrictionQuery ( user ) {
-  	if ( !user || user.group === 'consumer' ) {
-    	return { approved: true, state: 'public' };
+    if ( !user || user.group === 'consumer' ) {
+        return { approved: true, state: 'public' };
     }
 
-  	if ( user.group === 'admin' ) {
-    	return {};
+    if ( user.group === 'admin' ) {
+        //No restrictions
+        return {};
     }
 
-  	if ( user.group === 'producer' ) {
-      	return {
-        	$or: [
+    if ( user.group === 'producer' ) {
+        return {
+            $or: [
+                // can view all public and approved packages
                 { approved: true, state: 'public' },
-          		  { approved: false, createdBy: user._id },
-          		  { state: 'private', createdBy: user._id }
+                { approved: false, createdBy: user._id },
+                { state: 'private', createdBy: user._id }
             ]
         };
     }
 }
 
 router.get( '/', ( req, res, next ) => {
-
-    const packagesPerPage = 2;
+    const packagesPerPage = 5;
 
     const currentPage = parseInt( req.query.page || 0 );
 
@@ -61,6 +63,7 @@ router.get( '/', ( req, res, next ) => {
     const searchApproved = req.query.approved == 'on';
     const searchSort = req.query.sort || 'title';
     const searchSortDirection = req.query.sortDirection == 'desc' ? 'desc' : 'asc';
+
     const allowedSearchSort = [ 'title', 'approvedAt', 'createdAt', 'downloadsCount', 'visitsCount' ];
 
     if ( !allowedSearchSort.includes( searchSort ) ) {
@@ -95,11 +98,11 @@ router.get( '/', ( req, res, next ) => {
             currentPage: currentPage,
           	hasNextPage: packages.length == packagesPerPage,
             hasPreviousPage: currentPage > 0,
-            searchQuery, searchSort, searchMine, searchWaiting, searchApproved
+            searchQuery, searchSort, searchSortDirection, searchMine, searchWaiting, searchApproved,
+            format: format
         } );
     } );
 } );
-
 
 router.get( '/submit', allowGroups( [ 'producer', 'admin' ] ), ( req, res, next ) => {
     res.render( 'packages/submit' );
@@ -140,7 +143,7 @@ router.post( '/submit', allowGroups( [ 'producer', 'admin' ] ), upload.single( '
                     return next( err );
                 }
 
-              	var bag = BagIt( uploadFolder );
+                var bag = BagIt( uploadFolder );
 
               	bag.readManifest( ( err, entries ) => {
                 	if ( err ) {
@@ -151,10 +154,10 @@ router.post( '/submit', allowGroups( [ 'producer', 'admin' ] ), upload.single( '
 
                   	const checksums = {};
 
-                  	for ( let entry of entries ) {
-                      if(entry.name && entry.name.startsWith('data/')){
-                        checksums[entry.name.slice('data/'.length)]=entry.checksum;
-                      }
+                    for ( let entry of entries ) {
+                        if ( entry.name && entry.name.startsWith( 'data/' ) ) {
+                            checksums[ entry.name.slice( 'data/'.length ) ] = entry.checksum;
+                        }
                     }
 
                     SubmissionInformationPackage.validateFiles( checksums, package.files, uploadFolder + '/data', ( err, missingFiles ) => {
@@ -179,27 +182,26 @@ router.post( '/submit', allowGroups( [ 'producer', 'admin' ] ), upload.single( '
                                 return next( err );
                             }
 
-                          	// Aqui temos de ir buscar então o index às settings
-                          	Settings.findOne( { key: 'packagesIndex' }, ( err, setting ) => {
-                            	if ( err ) {
-                                	cleanup( req.file.path, uploadFolder, storageFolder );
+                            Settings.findOne( { key: 'packagesIndex' }, ( err, setting ) => {
+                                if ( err ) {
+                                    cleanup( req.file.path, uploadFolder, storageFolder );
 
-                                	return next( err );
+                                    return next( err );
                                 }
 
-                              	if ( !setting ) {
-                                	setting = new Settings({ key: 'packagesIndex', value: 0 });
+                                if ( !setting ) {
+                                    setting = new Settings( { key: 'packagesIndex', value: 0 } );
                                 }
 
-                              	new Package( {
-                                // Isto expande o objecto package, ou seja, coloca todos os valores de package também aqui
+                                new Package( {
+                                    // Isto expande o objecto package, ou seja, coloca todos os valores de package também aqui
                                     ...package,
                                     folder: id,
                                     approved: false,
                                     approvedBy: null,
                                     approvedAt: null,
                                     createdBy: req.user.id,
-                                  	index: setting.value++
+                                    index: setting.value++
                                 } ).save( ( err, result ) => {
                                     if ( err ) {
                                         cleanup( req.file.path, uploadFolder, storageFolder );
@@ -211,7 +213,7 @@ router.post( '/submit', allowGroups( [ 'producer', 'admin' ] ), upload.single( '
 
                                     cleanup( req.file.path, uploadFolder );
 
-                                  	setting.save();
+                                    setting.save();
 
                                     res.render( 'submit-received', {
                                         name: req.body.name,
@@ -221,93 +223,60 @@ router.post( '/submit', allowGroups( [ 'producer', 'admin' ] ), upload.single( '
                                 } );
                             } );
                         } );
-                      });
-            	} );
+                    } );
+                } );
             } );
         } );
     } );
 } );
 
 router.get( '/:id', ( req, res, next ) => {
+    const userCanSee = createRestrictionQuery( req.user );
 
-  const userCanSee = createRestrictionQuery( req.user );
-
-  Package.findOne({ $and: [ { index: req.params.id }, userCanSee ] }, ( err, package ) => {
-    if ( err ) {
-      return next( err );
-    }
-
-    if(!package){
-      return next( new Error( `No package with number ${ req.params.id } was found.` ) );
-    }
-
-    package.visitsCount =(package.visitsCount||0)+1;
-    package.save();
-
-    const buildHtml = ( elem ) => {
-      if ( typeof elem === 'string' ) {
-        return elem;
-      }
-      const attributes = Object.keys( elem.attributes || {} )
-      .map( key => key + '="' + elem.attributes[ key ] + '"' )
-      .join( ' ' );
-
-      return '<' + elem.type + ' ' + attributes + '>' + elem.body.map( buildHtml ).join( '' ) + '</' + elem.type + '>';
-    };
-
-    res.render( 'packages/detailed', {
-      package: package,
-      abstract: package.abstract.body.map( paragraph => buildHtml( paragraph ) ).join( '\n' ),
-      format: format,
-      canApprove: req.user && req.user.group=='admin'
-    } );
-  } );
-} );
-
-function readFolder ( folder, callback ) {
-    const filesList = [];
-
-    const fr = ( files, index, current, callback ) => {
-        if ( index >= files.length ) {
-            return callback( null, filesList );
+	Package.findOne( { $and: [ { index: req.params.id }, userCanSee ] }, ( err, package ) => {
+        if ( err ) {
+            return next( err );
         }
 
-        var fp = path.join( current, files[ index ] );
+        if ( !package ) {
+            return next( new Error( `No package with code ${ req.params.id } was found.` ) );
+        }
 
-        fs.stat( fp, ( error, file ) => {
-            if ( error ) {
-                return callback( error );
+        package.visitsCount = ( package.visitsCount || 0 ) + 1;
+        package.save();
+
+        const buildHtml = ( elem ) => {
+
+            if ( typeof elem === 'string' ) {
+                return elem;
             }
 
-            if( file.isFile() ) {
-                filesList.push( path.relative( folder, fp ) );
-                fr( files, index + 1, current, callback );
-            } else {
-                fs.readdir( fp, ( error, subfiles ) => {
-                    fr( subfiles, 0, fp, ( error ) => {
-                        if( error ) {
-                            return callback( error );
-                        }
+            const attributes = Object.keys( elem.attributes || {} )
+                .map( key => key + '="' + elem.attributes[ key ] + '"' )
+                .join( ' ' );
 
-                        fr( files, index + 1, current, callback );
-                    } );
-                } );
-            }
+            return '<' + elem.type + ' ' + attributes + '>' + elem.body.map( buildHtml ).join( '' ) + '</' + elem.type + '>';
+        };
+
+        res.render( 'packages/detailed', {
+            package: package,
+            abstract: package.abstract.body.map( paragraph => buildHtml( paragraph ) ).join( '\n' ),
+            format: format,
+            canApprove: req.user && req.user.group == 'admin'
         } );
-    };
-
-    fs.readdir( folder, ( error, files ) => {
-        fr( files, 0, folder, callback );
     } );
-}
+} );
 
+
+// Agora temos de criar o código para permitir aprovar os projetos
 router.get( '/:id/approve', allowGroups( [ 'admin' ] ), ( req, res, next ) => {
 	Package.findById( req.params.id, ( err, package ) => {
       	if ( err ) {
           	return next( err );
         }
-      	if ( !package.approved ) {
-          	package.approved = true;
+
+    	if ( !package.approved ) {
+        	package.approved = true;
           	package.approvedAt = new Date();
           	package.approvedBy = req.user._id;
 
@@ -315,9 +284,13 @@ router.get( '/:id/approve', allowGroups( [ 'admin' ] ), ( req, res, next ) => {
             	if ( err ) {
                 	return next( err );
                 }
+
                 const backUrl = req.header( 'Referer' ) || ( '/packages/' + package._id );
+
                 res.redirect( backUrl );
             } );
+        } else {
+            return next( new Error( `The package was already approved.` ) );
         }
     } );
 } );
@@ -328,41 +301,41 @@ router.get( '/:id/download', ( req, res, next ) => {
             return next( err );
         }
 
-        package.downloadsCount =(package.downloadsCount||0)+1;
+        package.downloadsCount = ( package.downloadsCount || 0 ) + 1;
         package.save();
 
         const random = uid.sync( 20 );
 
         const storageFolder = 'storage/bags/' + random;
-      	const packageFolder = path.join( 'storage/packages/', package.folder )
+        const packageFolder = path.join( 'storage/packages/', package.folder );
 
-      	const bag = BagIt( storageFolder );
+        const bag = BagIt( storageFolder );
 
-      	const addFileToBagit = ( files, index, callback ) => {
-          	if ( index >= files.length ) {
-            	return callback( null );
+        const addFileToBagit = ( files, index, callback ) => {
+            if ( index >= files.length ) {
+                return callback( null );
             }
 
-          	mkdirp( path.dirname( path.join( storageFolder, 'data', files[ index ] ) ), ( err ) => {
-              	if ( err ) {
-                  	return callback( err );
+            mkdirp( path.dirname( path.join( storageFolder, 'data', files[ index ] ) ), ( err ) => {
+                if ( err ) {
+                    return callback( err );
                 }
 
                 const writer = fs.createReadStream( path.join( packageFolder, files[ index ] ) )
                     .pipe( bag.createWriteStream( files[ index ] ) );
 
-                writer.on( 'error', ( err ) => callback( err ) );
+                  writer.on( 'error', ( err ) => callback( err ) );
 
-                writer.on( 'finish', () => addFileToBagit( files, index + 1, callback ) );
+                  writer.on( 'finish', () => addFileToBagit( files, index + 1, callback ) );
             } );
         };
 
         readFolder( packageFolder, ( err, files ) => {
-          	if ( err ) {
-            	return next( err );
+            if ( err ) {
+                return next( err );
             }
 
-        	addFileToBagit( files, 0, err => {
+            addFileToBagit( files, 0, err => {
                 if ( err ) {
                     return next( err );
                 }
@@ -386,9 +359,89 @@ router.get( '/:id/download', ( req, res, next ) => {
                         } );
                     } );
                 } );
-        	} );
+            } );
         } );
     } );
+} );
+
+router.get('/:id/remove',allowGroups( [ 'admin' ] ), ( req, res, next ) => {
+	Package.findOne( { _id: req.params.id, $or: [ { state: 'public' }, { state: 'private' } ] }, ( err, pck ) => {
+		if ( err ) {
+			return next( err );
+		}
+
+		if ( !pck ) {
+			return next( new Error( 'Package "' + req.params.id + '" not found.' ) );
+		}
+
+      	// Aqui deve ser pck.index porque o prof tinhanos pedido para a página de detalhes ser acedida por um código numérico em vez do id gigante
+      	// nesse caso não seria melhor também colocar o remove a fazer match com o index em vez do id?
+      	// tipo, podia-se por, mas em princípio remover um package não será uma ação que se vai querer fazer escrevendo diretamente o url
+      	// Se se quiser, vai-se À página de detalhes e clica-se lá no botão remover
+		//ok
+        const backUrl = req.query.redirect || req.header( 'Referer' ) || ( '/packages/' + pck.index );
+		const confirmBackUrl = req.query.redirect || req.header( 'Referer' ) || ( '/packages' );
+
+            if ( req.query.confirm == 'true' ) {
+                if ( pck.approved == true ) {
+                    pck.state = 'deleted';
+                    pck.save( ( err ) => {
+                        if ( err ) {
+                            return next( err );
+                        }
+
+                        res.redirect( backUrl );
+                    } );
+                } else {
+                    pck.remove( ( err ) => {
+                        if ( err ) {
+                            return next( err );
+                        }
+
+                        res.redirect( backUrl );
+                    } );
+                }
+            } else {
+                res.render( 'packages/remove', { package: pck, redirectLink: backUrl, confirmRedirectLink: confirmBackUrl } );
+            }
+        } );
+} );
+
+router.get('/:id/recover/:state',allowGroups( [ 'admin' ] ), ( req, res, next ) => {
+	Package.findOne( { _id: req.params.id, state: 'deleted' }, ( err, pck ) => {
+		if ( err ) {
+			return next( err );
+		}
+
+		if ( !pck ) {
+			return next( new Error( 'Package "' + req.params.id + '" not found.' ) );
+		}
+
+        if ( req.params.state != 'public' && req.params.state != 'private' ) {
+        	return next( new Error( 'Invalid state ' + req.params.state + ' is not public neither private.' ) );
+        }
+
+        const backUrl = req.query.redirect || req.header( 'Referer' ) || ( '/packages/' + pck.index );
+
+      	User.find( { _id: pck.createdBy, deleted: { $ne: true } }, ( err, user ) => {
+          	if ( err ) {
+              	return next( err );
+            }
+
+          	if ( !user ) {
+            	return next( new Error( 'Cannot recover package because it\'s author has been deleted.' ) );
+            }
+
+            pck.state = req.params.state;
+            pck.save( ( err ) => {
+                if ( err ) {
+                    return next( err );
+                }
+
+                res.redirect( backUrl );
+            } );
+        } );
+	} );
 } );
 
 module.exports = router;
