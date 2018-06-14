@@ -1,13 +1,19 @@
 extends ../layout
 
 block content
-    form(method="post" action="/packages/submit" enctype="multipart/form-data")
-        p
-            label Nome   
-            input.w3-input(type="text" placeholder="Insira o seu nome..." name="name")
-        p
-            label Ficheiro
-            input.w3-input(type="file" placeholder="Insira o ficheiro..." name="file")
+    div.w3-left.w3-margin
+        a.w3-button.w3-green.w3-xlarge(href="/packages/create")
+            i.fa.fa-upload
+            | Criação assistida de arquivo
 
-        p
-            input(type="submit" value="Submeter Ficheiro")
+    div.w3-row-padding
+      form(method="post" action="/packages/submit" enctype="multipart/form-data")
+          p
+              label Nome
+              input.w3-input(type="text" placeholder="Insira o seu nome..." name="name")
+          p
+              label Ficheiro
+              input.w3-input(type="file" placeholder="Insira o ficheiro..." name="file")
+
+          p
+              input(type="submit" value="Submeter Ficheiro")

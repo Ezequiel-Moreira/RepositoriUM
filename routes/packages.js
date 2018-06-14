@@ -104,6 +104,15 @@ router.get( '/', ( req, res, next ) => {
     } );
 } );
 
+router.get('/create',allowGroups(['producer','admin']),(req,res,next)=>{
+  res.render('packages/create');
+});
+
+router.post('/create',allowGroups(['producer','admin']),(req,res,next)=>{
+   //add later
+   res.redirect('/packages');
+});
+
 router.get( '/submit', allowGroups( [ 'producer', 'admin' ] ), ( req, res, next ) => {
     res.render( 'packages/submit' );
 } );
