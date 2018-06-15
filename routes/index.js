@@ -29,7 +29,7 @@ function allowLoggedOut () {
 }
 
 function loadPackages ( field, order, callback ) {
-	Package.find( { approved: true , $or: [ { state: 'public' }, { state: 'private' } ] } ).sort( { [ field ]: order } ).limit( 10 ).exec( callback );
+	Package.find( { approved: true ,  state: 'public' } ).sort( { [ field ]: order } ).limit( 10 ).exec( callback );
 }
 
 /* GET home page. */

@@ -13,14 +13,21 @@ block content
           p //adicionar capacidade para vários autores e supervisores mais tarde
           p
               label Autor
-              input.w3-input(type="text" placeholder="Insira o autor..." autor="autor")
-              input.w3-input(type="text" placeholder="Insira o id deste autor..." id="id")
-              input.w3-input(type="text" placeholder="Insira o email deste autor..." mail="mail")
+              div.w3-row-padding
+                div.w3-third
+                  input.w3-input(type="text" placeholder="Insira o nome do autor..." autor="autor")
+                div.w3-third
+                  input.w3-input(type="text" placeholder="Insira o id do autor..." id="id")
+                div.w3-third
+                  input.w3-input(type="text" placeholder="Insira o email do autor..." mail="mail")
 
           p
               label Supervisor
-              input.w3-input(type="text" placeholder="Insira o supervisor..." superv="superv")
-              input.w3-input(type="text" placeholder="Insira o email deste supervisor..." MS="MS")
+              div.w3-row-padding
+                div.w3-half
+                  input.w3-input(type="text" placeholder="Insira o nome do supervisor..." superv="superv")
+                div.w3-half
+                  input.w3-input(type="text" placeholder="Insira o email do supervisor..." MS="MS")
 
           p //adicionar capacidade de colocar várias keywords mais tarde
           p
@@ -31,19 +38,14 @@ block content
               label Abstract
               input.w3-input(type="text" placeholder="Insira o abstract..." abstract="abstract")
 
+          p //adicionar para poder-se colocar uma pasta em vez de um ficheiro
           p
               label Pasta
-              input.w3-input(type="text" placeholder="Insira a pasta onde o ficheiro está localizado em..." folder="folder")
-
-          p //adicionar ... várias files mais tarde
-          p
-              label File
-              input.w3-input(type="text" placeholder="Insira o caminho do ficheiro relativo à pasta..." path="path")
-              input.w3-input(type="text" placeholder="Insira uma descrição do ficheiro..." desc="desc")
+              input.w3-input(type="file" placeholder="Insira a pasta onde está localizado o projeto..." fol="fol")
 
           p Por favor selecione que visualização pretende dar ao ficheiro que está a criar
           p
-              label State
+              label Estado
               select.w3-select(name="sort" style="margin-top: 8px; margin-bottom: 16px;")
                   option(value="public" selected=searchSort == 'public') Publico
                   option(value="private" selected=searchSort == 'private') Privado
