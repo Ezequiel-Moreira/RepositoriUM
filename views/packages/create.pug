@@ -1,54 +1,256 @@
 extends ../layout
 
+block head
+		script.
+				function removeFromList ( event ) {
+					$( event.target ).closest( '.w3-flex' ).remove();
+				}
+
+				function authorTemplate () {
+						return `<div class="w3-flex">
+							<div class="w3-row-padding w3-flex-grow">
+								<div class="w3-third">
+										<input class="w3-input" type="text" placeholder="Insira o nome do autor..." name="autor" />
+								</div>
+								<div class="w3-third">
+										<input class="w3-input" type="text" placeholder="Insira o id do autor..." name="id" />
+								</div>
+								<div class="w3-third">
+										<input class="w3-input" type="text" placeholder="Insira o email do autor..." name="mail" />
+								</div>
+						</div>
+						<div class="w3-flex-fixed">
+							<a class="w3-button w3-grey w3-hover-red btn-authors-remove">
+								<i class="fa fa-minus"></i>
+							</a>
+						</div>
+					</div>`;
+				}
+
+
+				function addAuthor () {
+						var author = $.parseHTML( authorTemplate() );
+						$( author ).appendTo( '#form-authors-list' );
+						$( '.btn-authors-remove', author ).on( 'click', removeFromList );
+				}
+
+
+				function supervisorTemplate () {
+					return `<div class="w3-flex">
+						<div class="w3-row-padding w3-flex-grow">
+							<div class="w3-half">
+									<input class="w3-input" type="text" placeholder="Insira o nome do supervisor..." name="superv" />
+							</div>
+							<div class="w3-half">
+									<input class="w3-input" type="text" placeholder="Insira o email do supervisor..." name="MS" />
+							</div>
+					</div>
+					<div class="w3-flex-fixed">
+						<a class="w3-button w3-grey w3-hover-red btn-supervisors-remove">
+							<i class="fa fa-minus"></i>
+						</a>
+					</div>
+				</div>`;
+				}
+
+				function addSupervisor () {
+						var superv = $.parseHTML( supervisorTemplate() );
+						$( superv ).appendTo( '#form-supervisors-list' );
+						$( '.btn-supervisors-remove', superv ).on( 'click', removeFromList );
+				}
+
+				function keywordTemplate () {
+						return `<div class="w3-flex">
+							<div class="w3-row-padding w3-flex-grow">
+									<input class="w3-input" type="text" placeholder="Insira keyword..." name="keyword" />
+						</div>
+						<div class="w3-flex-fixed">
+							<a class="w3-button w3-grey w3-hover-red btn-keywords-remove">
+								<i class="fa fa-minus"></i>
+							</a>
+						</div>
+					</div>`;
+				}
+
+
+				function addKeyword () {
+						var keyword = $.parseHTML( keywordTemplate() );
+						$( keyword ).appendTo( '#form-keywords-list' );
+						$( '.btn-keywords-remove', keyword ).on( 'click', removeFromList );
+				}
+
+				function fileTemplate(){
+					return `<div class="w3-flex">
+						<div class="w3-row-padding w3-flex-grow">
+							<div class="w3-half">
+								<input class="w3-input" type="file" placeholder="insira ficheiros nesta pasta..." name="file_data" />
+							</div>
+							<div class="w3-half">
+								<input class="w3-input" type="text" placeholder="insira a descrição deste ficheiro ..." name="file_description" />
+							</div>
+					</div>
+					<div class="w3-flex-fixed">
+						<a class="w3-button w3-grey w3-hover-red btn-files-remove">
+							<i class="fa fa-minus"></i>
+						</a>
+					</div>
+				</div>`;
+				}
+
+				function addFile(){
+						var file = $.parseHTML( fileTemplate() );
+						$( file ).appendTo( '#form-folder-list' );
+						$( '.btn-files-remove', file ).on( 'click', removeFromList );
+				}
+
+				function folderTemplate(){
+					return `
+					<div>
+						<input class="w3-input" type="text" placeholder="insira nome da subpasta..." name="file_path" />
+						<div class="w3-flex">
+							<div class="w3-row-padding w3-flex-grow">
+								<div class="w3-half">
+									<input class="w3-input" type="file" placeholder="insira ficheiros nesta pasta..." name="file_data" />
+								</div>
+								<div class="w3-half">
+									<input class="w3-input" type="text" placeholder="insira a descrição deste ficheiro ..." name="file_description" />
+								</div>
+							</div>
+						<div class="w3-flex-fixed">
+							<a class="w3-button w3-grey w3-hover-red btn-files-remove">
+								<i class="fa fa-minus"></i>
+							</a>
+						</div>
+						</div>
+						<div class="w3-padding w3-center ">
+							<a class="w3-button w3-green #btn-files-add">
+								<i class="fa fa-plus"></i>
+							</a>
+							<a class="w3-button w3-green #btn-folders-add">
+								<i class="fa fa-plus"></i>
+							</a>
+							<a class="w3-button w3-green btn-folders-remove">
+								<i class="fa fa-minus"></i>
+							</a>
+						</div>
+					</div>`;
+				}
+
+				function addFolder(){
+						var folder = $.parseHTML( folderTemplate() );
+						$( folder ).appendTo( '#form-folder-list' );
+						$( '.btn-folders-remove', folder ).on( 'click', removeFromList );
+				}
+
+				$( () => {
+						$( '#btn-authors-add' ).on( 'click', addAuthor );
+						$( '#btn-supervisors-add' ).on( 'click', addSupervisor );
+						$( '#btn-keywords-add' ).on( 'click', addKeyword );
+						$( '#btn-files-add' ).on('click',addFile);
+						$( '#btn-folders-add' ).on('click',addFolder);
+
+						$( '.btn-authors-remove' ).on( 'click', removeFromList );
+						$( '.btn-supervisors-remove' ).on( 'click', removeFromList );
+						$( '.btn-keywords-remove' ).on( 'click', removeFromList );
+						$( '.btn-files-remove' ).on('click',removeFromList );
+						$( '.btn-folders-remove' ).on('click',removeFromList );
+				} );
+
+
+
 block content
-    div.w3-row-padding
-      form(method="post" action="/packages/create" enctype="multipart/form-data")
-          p
-              label Titulo
-              input.w3-input(type="text" placeholder="Insira o titulo..." title="title")
-          p
-              label UC
-              input.w3-input(type="text" placeholder="Insira a UC..." UC="UC")
+		div.w3-row-padding
+			form(method="post" action="/packages/create" enctype="multipart/form-data")
+					p
+							label Titulo
+							input.w3-input(type="text" placeholder="Insira o titulo..." name="title")
+					p
+							label UC
+							input.w3-input(type="text" placeholder="Insira a UC..." name="UC")
 
-          p //adicionar capacidade para vários autores e supervisores mais tarde
-          p
-              label Autor
-              div.w3-row-padding
-                div.w3-third
-                  input.w3-input(type="text" placeholder="Insira o nome do autor..." autor="autor")
-                div.w3-third
-                  input.w3-input(type="text" placeholder="Insira o id do autor..." id="id")
-                div.w3-third
-                  input.w3-input(type="text" placeholder="Insira o email do autor..." mail="mail")
+					p
+							label Autores
+							div#form-authors-list
+									div.w3-flex
+											div.w3-row-padding.w3-flex-grow
+												div.w3-third
+													input.w3-input(type="text" placeholder="Insira o nome do autor..." name="autor")
+												div.w3-third
+													input.w3-input(type="text" placeholder="Insira o id do autor..." name="id")
+												div.w3-third
+													input.w3-input(type="text" placeholder="Insira o email do autor..." name="mail")
+											div.w3-flex-fixed
+												a.w3-button.w3-grey.w3-hover-red.btn-authors-remove
+													i.fa.fa-minus
 
-          p
-              label Supervisor
-              div.w3-row-padding
-                div.w3-half
-                  input.w3-input(type="text" placeholder="Insira o nome do supervisor..." superv="superv")
-                div.w3-half
-                  input.w3-input(type="text" placeholder="Insira o email do supervisor..." MS="MS")
+							div.w3-padding.w3-center
+									a.w3-button.w3-green#btn-authors-add
+											i.fa.fa-plus
+											|  Adicionar
 
-          p //adicionar capacidade de colocar várias keywords mais tarde
-          p
-              label Keyword
-              input.w3-input(type="text" placeholder="Insira keyword..." key="key")
+					p
+							label Supervisor
+							div#form-supervisors-list
+									div.w3-flex
+											div.w3-row-padding.w3-flex-grow
+												div.w3-half
+													input.w3-input(type="text" placeholder="Insira o nome do supervisor..." name="superv")
+												div.w3-half
+													input.w3-input(type="text" placeholder="Insira o email do supervisor..." name="MS")
+											div.w3-flex-fixed
+												a.w3-button.w3-grey.w3-hover-red.btn-supervisors-remove
+													i.fa.fa-minus
+							div.w3-padding.w3-center
+									a.w3-button.w3-green#btn-supervisors-add
+										i.fa.fa-plus
+										|  Adicionar
 
-          p
-              label Abstract
-              input.w3-input(type="text" placeholder="Insira o abstract..." abstract="abstract")
+					p
+							label Keyword
+							div#form-keywords-list
+								div.w3-flex
+									div.w3-row-padding.w3-flex-grow
+										input.w3-input(type="text" placeholder="Insira keyword..." name="keyword")
+									div.w3-flex-fixed
+										a.w3-button.w3-grey.w3-hover-red.btn-keywords-remove
+											i.fa.fa-minus
+							div.w3-padding.w3-center
+									a.w3-button.w3-green#btn-keywords-add
+											i.fa.fa-plus
+											|  Adicionar
 
-          p //adicionar para poder-se colocar uma pasta em vez de um ficheiro
-          p
-              label Pasta
-              input.w3-input(type="file" placeholder="Insira a pasta onde está localizado o projeto..." fol="fol")
+					p
+							label Abstract
+							input.w3-input(type="text" placeholder="Insira o abstract..." name="abstract")
 
-          p Por favor selecione que visualização pretende dar ao ficheiro que está a criar
-          p
-              label Estado
-              select.w3-select(name="sort" style="margin-top: 8px; margin-bottom: 16px;")
-                  option(value="public" selected=searchSort == 'public') Publico
-                  option(value="private" selected=searchSort == 'private') Privado
+					p
+							label Pasta
+							div#form-folder-list
+								div.w3-flex
+									div.w3-row-padding.w3-flex-grow
+										div.w3-half
+											input.w3-input(type="file" placeholder="insira ficheiros nesta pasta..." name="file_data")
+										div.w3-half
+											input.w3-input(type="text" placeholder="insira a descrição deste ficheiro ..." name="file_description")
+									div.w3-flex-fixed
+										a.w3-button.w3-grey.w3-hover-red.btn-files-remove
+											i.fa.fa-minus
+							div.w3-padding.w3-center
+								a.w3-button.w3-green#btn-files-add
+										i.fa.fa-plus
+										|  Adicionar ficheiros
+								a.w3-button.w3-green#btn-folders-add
+										i.fa.fa-plus
+										|  Adicionar subpastas
 
-          p
-              input(type="submit" value="Submeter Ficheiro")
+
+
+					p Por favor selecione que visualização pretende dar ao ficheiro que está a criar
+					p
+							label Estado
+							select.w3-select(name="sort" style="margin-top: 8px; margin-bottom: 16px;")
+									option(value="public" selected=searchSort == 'public') Publico
+									option(value="private" selected=searchSort == 'private') Privado
+
+					p
+							input(type="submit" value="Submeter Ficheiro")
