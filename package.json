@@ -30,6 +30,7 @@
     "serve-favicon": "~2.4.5",
     "sha": "^2.0.1",
     "sha.js": "^2.4.11",
+    "trumbowyg": "^2.10.0",
     "uid-safe": "^2.1.5",
     "xml2js": "^0.4.19",
     "xmlbuilder": "^10.0.0",

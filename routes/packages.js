@@ -16,6 +16,7 @@ var BagIt = require( 'bagit-fs' );
 var readFolder = require( '../services/readFolder' );
 var mkdirp = require( 'mkdirp' );
 var { format } = require( 'date-fns' );
+var xml2js = require('xml2js');
 
 var upload = multer( {
     dest: 'uploads/',
@@ -329,6 +330,56 @@ const objectify = ( body, prefix, properties ) => {
     }
 
     return objects;
+};
+
+const convertTreeToAbstract = ( tree, onlyParagraphs ) => {
+  if ( onlyParagraphs && tree[ '#name' ] != 'p' ) {
+    throw new Error( `Only paragraphs are allowed here.` );
+  } else if ( !onlyParagraphs && ![ 'strong', 'em', 'a', '__text__' ].includes( tree[ '#name' ] ) ) {
+    throw new Error( `Invalid element ${ tree[ '#name' ] } found.` );
+  }
+
+  if ( tree[ '#name' ] == '__text__' ) {return tree._;}
+  if(tree['#name']=='strong'){tree['#name']='b';}
+  if(tree['#name']=='em'){tree['#name']='i';}
+  if(tree['#name']=='a'){tree['#name']='xref';}
+
+  let body = tree.$$.map( el => convertTreeToAbstract( el, false ) );
+
+  const attributes = {};
+
+  if ( tree[ '#name' ] == 'xref' ) {
+    if ( !tree[ "$" ][ 'href' ] ) {
+      throw new Error( `Link element requires a href attribute.` );
+    } else {
+      attributes[ 'url' ] = tree[ "$" ][ 'href' ];
+    }
+  }
+
+  return {
+    type: tree[ '#name' ],
+    attributes, body
+  };
+};
+
+const convertHtmlToAbstract = ( html, callback ) => {
+  	var parser = new xml2js.Parser( {
+        explicitChildren: true,
+        preserveChildrenOrder: true,
+        charsAsChildren: true
+    } );
+
+  	parser.parseString( '<root>' + html + '</root>', ( err, tree ) => {
+    		if ( err ) {
+          	return callback( err );
+        }
+
+      	try {
+        		callback( null, { body: tree.root.$$.map( el => convertTreeToAbstract( el, true ) ) } );
+        } catch ( error ) {
+          	callback( error );
+        }
+    } );
 };
 
 
