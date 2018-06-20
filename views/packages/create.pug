@@ -2,70 +2,136 @@ extends ../layout
 
 block head
 		script.
-				function joinPaths ( p1, p2 ) {
+				function joinPath ( p1, p2 ) {
 						if ( !p1 && !p2 ) return '';
 						else if ( !p1 ) return p2;
 						else if ( !p2 ) return p1;
-						else if ( p1.endsWith( '/' ) && p2.startsWith( '/' ) ) return p1 + p2.slice( 1 ) ;
+						else if ( p1.endsWith( '/' ) && p2.startsWith( '/' ) ) return p1 + p2.slice( 1 );
 						else if ( p1.endsWith( '/' ) || p2.startsWith( '/' ) ) return p1 + p2;
 						else return p1 + '/' + p2;
 				}
 
 				application.register( "file", class extends Stimulus.Controller {
-						static get targets () {return [ 'txtPath', 'txtFile', 'txtName', 'lblFullname' ];}
-
-						get dirname () {return this.data.get( 'dirname' );}
-
-						set dirname ( value ) {
-								this.data.set( 'dirname', value );
-								this.fullname = joinPaths( this.dirname, this.basename );
+						static get targets () {
+								return [ 'txtPath', 'txtFile', 'txtName', 'lblFullname' ];
 						}
 
-						get basename () {return this.data.get( 'basename' );}
 
-						set basename ( value ) {
-								this.data.set( 'basename', value );
-								this.fullname = joinPaths( this.dirname, this.basename );
+						connect () {
+								this.updateTextBoxes();
 						}
 
-						get fullname () {return this.data.get( 'fullname' );}
-
-						set fullname ( value ) {
-								this.data.set( 'fullname', value );
-
+						updateTextBoxes () {
 								if ( this.hasLblFullnameTarget ) {
 										$( this.lblFullnameTarget ).text( this.fullname );
 								}
 
 								if ( this.basename ) {
-										$( this.txtPathTarget ).val( this.fullname );
 										if ( this.basename != $( this.txtNameTarget ).val() ) {
 												$( this.txtNameTarget ).val( this.basename );
 										}
+
+										$( this.txtPathTarget ).val( this.fullname );
 								} else {
 										$( this.txtPathTarget ).val( '' );
 								}
 						}
 
+						get dirname () {
+								return this.data.get( 'dirname' );
+						}
+
+						set dirname ( value ) {
+								this.data.set( 'dirname', value );
+
+								this.fullname = joinPath( this.dirname, this.basename );
+						}
+
+						get basename () {
+								return this.data.get( 'basename' );
+						}
+
+						set basename ( value ) {
+								this.data.set( 'basename', value );
+
+								this.fullname = joinPath( this.dirname, this.basename );
+						}
+
+						get fullname () {
+								return this.data.get( 'fullname' );
+						}
+
+						set fullname ( value ) {
+								this.data.set( 'fullname', value );
+
+								this.updateTextBoxes();
+						}
+
 						updateFile () {
-								if ( !this.basename && this.txtFileTarget.files.length > 0 ) {
+								if ( !this.basename && this.txtFileTarget.files.length ) {
 										this.basename = this.txtFileTarget.files[ 0 ].name;
 								}
 						}
 
-						updateBasename () {this.basename = $( this.txtNameTarget ).val();}
+						updateBasename () {
+								this.basename = $( this.txtNameTarget ).val();
+						}
 
-						remove () {$( this.element ).remove();}
+						remove () {
+								$( this.element ).remove();
+						}
 				} );
 
 				application.register( "folder", class extends Stimulus.Controller {
-						static get targets () {return [ 'txtName', 'lblFullname', 'foldersList', 'filesList' ];}
+						static get targets () {
+								return [ "txtName", "foldersList", "filesList", 'lblFullname' ];
+						}
+
+						connect () {
+								if ( this.hasLblFullnameTarget ) {
+										$( this.lblFullnameTarget ).text( this.fullname );
+								}
+						}
+
+						get dirname () {
+								return this.data.get( 'dirname' );
+						}
+
+						set dirname ( value ) {
+								this.data.set( 'dirname', value );
+
+								this.fullname = joinPath( this.dirname, this.basename );
+						}
+
+						get basename () {
+								return this.data.get( 'basename' );
+						}
+
+						set basename ( value ) {
+								this.data.set( 'basename', value );
+
+								this.fullname = joinPath( this.dirname, this.basename );
+						}
+
+						get fullname () {
+								return this.data.get( 'fullname' );
+						}
+
+						set fullname ( value ) {
+								this.data.set( 'fullname', value );
+
+								if ( this.hasLblFullnameTarget ) {
+										$( this.lblFullnameTarget ).text( value );
+								}
+
+								this.updateChildrenDirname();
+						}
 
 						addFolderTemplate () {
 								return `<div class="w3-padding" data-controller="folder" data-folder-dirname="${ this.fullname }" data-folder-fullname="${ this.fullname }">
-										<i class="fa fa-folder"></i> <span data-target="folder.lblFullname">${this.fullname}</span>
+										<i class="fa fa-folder"></i> <span data-target="folder.lblFullname"></span>
 										<div class="w3-flex">
-												<input class="w3-input w3-flex-grow w3-margin-right" type="text" placeholder="Folder name..." data-action="input->folder#updateName" data-target="folder.txtName" />
+												<input class="w3-flex-grow w3-input w3-margin-right" type="text" placeholder="Folder name..." data-target="folder.txtName" data-action="input->folder#updateBasename" />
 												<div class="w3-flex-fixed">
 														<a class="w3-button w3-white w3-hover-green" data-action="click->folder#addFolder">
 																<i class="fa fa-folder"></i>
@@ -73,58 +139,25 @@ block head
 														<a class="w3-button w3-white w3-hover-green" data-action="click->folder#addFile">
 																<i class="fa fa-plus"></i>
 														</a>
-														<a class="w3-button w3-white w3-hover-red" data-action="click->folder#remove">
+														<a class="w3-button w3-white w3-hover-red" data-action="click->folder#remove" data-target="folder.btnRemove">
 																<i class="fa fa-minus"></i>
 														</a>
 												</div>
 										</div>
-										<!-- Cada subpasta pode ter também uma lista de sub-sub-pastas e sub-ficheios-->
 										<div data-target="folder.foldersList"></div>
 										<div data-target="folder.filesList"></div>
 								</div>
 								`;
 						}
 
-						get dirname () {return this.data.get( 'dirname' );}
-
-						set dirname ( value ) {
-								this.data.set( 'dirname', value );
-								this.fullname = joinPaths( this.dirname, this.basename );
-						}
-
-						get basename () {return this.data.get( 'basename' );}
-
-						set basename ( value ) {
-								this.data.set( 'basename', value );
-								this.fullname = joinPaths( this.dirname, this.basename );
-						}
-
-						get fullname () {return this.data.get( 'fullname' );}
-
-						set fullname ( value ) {
-								this.data.set( 'fullname', value );
-
-								if ( this.hasLblFullnameTarget ) {$( this.lblFullnameTarget ).text( value );}
-
-								for ( let child of this.foldersListTarget.children ) {
-										const controller = this.application.getControllerForElementAndIdentifier( child, 'folder' );
-										controller.dirname = this.fullname;
-								}
-
-								for ( let child of this.filesListTarget.children ) {
-										const controller = this.application.getControllerForElementAndIdentifier( child, 'file' );
-										controller.dirname = this.fullname;
-								}
-						}
-
 						addFileTemplate () {
 								return `<div class="w3-padding" data-controller="file" data-file-dirname="${ this.fullname }" data-file-basename="" data-file-fullname="${ this.fullname }">
-										<i class="fa fa-file"></i><span data-target="file.lblFullname">${ this.fullname }</span>
+										<i class="fa fa-file"></i> <span data-target="file.lblFullname"></span>
 										<div class="w3-flex">
 												<input type="hidden" name="file_path" data-target="file.txtPath" />
 												<div class="w3-row-padding w3-margin-right w3-flex-grow">
 														<div class="w3-third">
-																<input class="w3-input" type="file" placeholder="Upload file..." name="file_data" data-target="file.txtFile" data-action="input->file#updateFile" />
+																<input class="w3-input" type="file" placeholder="Upload file" name="file_data" data-target="file.txtFile" data-action="input->file#updateFile" />
 														</div>
 														<div class="w3-third">
 																<input class="w3-input" type="text" placeholder="File name..." data-target="file.txtName" data-action="input->file#updateBasename" />
@@ -143,210 +176,254 @@ block head
 								`;
 						}
 
+						updateBasename () {
+								const basename = this.txtNameTarget.value;
+
+								this.basename = basename;
+						}
+
+						updateChildrenDirname () {
+								const dirname = this.fullname;
+
+								for ( let target of this.foldersListTarget.children ) {
+										const controller = this.application.getControllerForElementAndIdentifier( target, 'folder' );
+
+										controller.dirname = dirname;
+								}
+
+								for ( let target of this.filesListTarget.children ) {
+										const controller = this.application.getControllerForElementAndIdentifier( target, 'file' );
+
+										controller.dirname = dirname;
+								}
+						}
+
 						addFolder () {
 								const folder = $.parseHTML( this.addFolderTemplate() );
+
 								$( folder ).appendTo( this.foldersListTarget );
 						}
 
 						addFile () {
-								const file=$.parseHTML(this.addFileTemplate());
-								$(file).appendTo(this.filesListTarget);
+								const file = $.parseHTML( this.addFileTemplate() );
+
+								$( file ).appendTo( this.filesListTarget );
 						}
 
-						remove(){$( this.element ).remove();}
-
-						updateName(){
-							const name = $( this.txtNameTarget ).val();
-							this.basename = name;
+						remove () {
+								$( this.element ).remove();
 						}
-
 				} );
-
-
-				function removeFromList ( event ) {
-					$( event.target ).closest( '.w3-flex' ).remove();
-				}
 
 				function authorTemplate () {
 						return `<div class="w3-flex">
-							<div class="w3-row-padding w3-flex-grow">
-								<div class="w3-quarter">
-										<input class="w3-input" type="text" placeholder="Insira o nome do autor..." name="autor" />
+								<div class="w3-row-padding w3-flex-grow">
+										<div class="w3-quarter">
+												<input class="w3-input" type="text" placeholder="Name of the author..." name="author_name" />
+										</div>
+										<div class="w3-quarter">
+												<input class="w3-input" type="text" placeholder="Identification code of the author..." name="author_id" />
+										</div>
+										<div class="w3-quarter">
+												<input class="w3-input" type="text" placeholder="Email of the author..." name="author_email" />
+										</div>
+										<div class="w3-quarter">
+												<input class="w3-input" type="text" placeholder="Curricular unit of the author..." name="author_course" />
+										</div>
 								</div>
-								<div class="w3-quarter">
-										<input class="w3-input" type="text" placeholder="Insira o id do autor..." name="id" />
+								<div class="w3-flex-fixed">
+										<a class="w3-button w3-white w3-hover-red btn-authors-remove">
+												<i class="fa fa-minus"></i>
+										</a>
 								</div>
-								<div class="w3-quarter">
-										<input class="w3-input" type="text" placeholder="Insira o email do autor..." name="mail" />
-								</div>
-								<div class="w3-quarter">
-										<input class="w3-input" type="text" placeholder="Insira a UC do autor..." name="autUC" />
-								</div>
-						</div>
-						<div class="w3-flex-fixed">
-							<a class="w3-button w3-grey w3-hover-red btn-authors-remove">
-								<i class="fa fa-minus"></i>
-							</a>
-						</div>
-					</div>`;
+						</div>`;
 				}
 
 
+				function removeFromList ( event ) {
+							$( event.target ).closest( '.w3-flex' ).remove();
+				}
+
 				function addAuthor () {
-						var author = $.parseHTML( authorTemplate() );
-						$( author ).appendTo( '#form-authors-list' );
+							var author = $.parseHTML( authorTemplate() );
+
+							$( author ).appendTo( '#form-authors-list' );
+
 						$( '.btn-authors-remove', author ).on( 'click', removeFromList );
 				}
 
-
 				function supervisorTemplate () {
-					return `<div class="w3-flex">
-						<div class="w3-row-padding w3-flex-grow">
-							<div class="w3-half">
-									<input class="w3-input" type="text" placeholder="Insira o nome do supervisor..." name="superv" />
-							</div>
-							<div class="w3-half">
-									<input class="w3-input" type="text" placeholder="Insira o email do supervisor..." name="MS" />
-							</div>
-					</div>
-					<div class="w3-flex-fixed">
-						<a class="w3-button w3-grey w3-hover-red btn-supervisors-remove">
-							<i class="fa fa-minus"></i>
-						</a>
-					</div>
-				</div>`;
-				}
+						return `<div class="w3-flex">
+										<div class="w3-row-padding w3-flex-grow">
+												<div class="w3-half">
+														<input class="w3-input type="text" placeholder="Name of the supervisor..." name="supervisor_name"/>
+												</div>
+												<div class="w3-half">
+														<input class="w3-input" type="text" placeholder="Email of the supervisor..." name="supervisor_email"/>
+												</div>
+										</div>
+										<div class="w3-flex-fixed">
+												<a class="w3-button w3-white w3-hover-red btn-supervisors-remove">
+														<i class="fa fa-minus"></i>
+												</a>
+										</div>
+								</div>`;
+						}
 
 				function addSupervisor () {
 						var superv = $.parseHTML( supervisorTemplate() );
+
 						$( superv ).appendTo( '#form-supervisors-list' );
+
 						$( '.btn-supervisors-remove', superv ).on( 'click', removeFromList );
 				}
 
 				function keywordTemplate () {
 						return `<div class="w3-flex">
-							<div class="w3-row-padding w3-flex-grow">
-									<input class="w3-input" type="text" placeholder="Insira keyword..." name="keyword" />
-						</div>
-						<div class="w3-flex-fixed">
-							<a class="w3-button w3-grey w3-hover-red btn-keywords-remove">
-								<i class="fa fa-minus"></i>
-							</a>
-						</div>
-					</div>`;
+								<input class="w3-input w3-flex-grow" type="text" placeholder="Keyword describing the package..." name="keyword" />
+								<div class="w3-flex-fixed">
+										<a class="w3-button w3-white w3-hover-red btn-keywords-remove">
+												<i class="fa fa-minus"></i>
+										</a>
+								</div>
+						</div>`;
 				}
 
-
-				function addKeyword () {
+				function addKeyword ( e ) {
 						var keyword = $.parseHTML( keywordTemplate() );
-						$( keyword ).appendTo( '#form-keywords-list' );
+
+							$( keyword ).appendTo( '#form-keywords-list' );
+
 						$( '.btn-keywords-remove', keyword ).on( 'click', removeFromList );
 				}
 
-
 				$( () => {
-					$( '#btn-authors-add' ).on( 'click', addAuthor );
-					$( '#btn-supervisors-add' ).on( 'click', addSupervisor );
-					$( '#btn-keywords-add' ).on( 'click', addKeyword );
+						$( '#btn-authors-add' ).on( 'click', addAuthor );
+						$( '#btn-supervisors-add' ).on( 'click', addSupervisor );
+						$( '#btn-keywords-add' ).on( 'click', addKeyword );
 
-					$( '.btn-authors-remove' ).on( 'click', removeFromList );
-					$( '.btn-supervisors-remove' ).on( 'click', removeFromList );
-					$( '.btn-keywords-remove' ).on( 'click', removeFromList );
+						$( '.btn-authors-remove' ).on( 'click', removeFromList );
+						$( '.btn-supervisors-remove' ).on( 'click', removeFromList );
+						$( '.btn-keywords-remove' ).on( 'click', removeFromList );
 
-					$( '#abstract' ).trumbowyg( {
-						btns: [ 'viewHTML', 'strong', 'em', '|', 'link', '|', 'removeformat', 'fullscreen' ],
-						autogrow: true,
-						minimalLinks: true
-					} );
+						$( '#abstract' ).trumbowyg( {
+								btns: [ 'viewHTML', 'strong', 'em', '|', 'link', '|', 'removeformat', 'fullscreen' ],
+								autogrow: true,
+								minimalLinks: true
+						} );
+
+						if ( $( "#abstract" ).data( 'value' ) ) {
+								$( '#abstract' ).trumbowyg( 'html', $( "#abstract" ).data( 'value' ) );
+						}
 				} );
 
 
 
 block content
 		div.w3-row-padding
-			form(method="post" action="/packages/create" enctype="multipart/form-data")
-					p
-							label Titulo
-							input.w3-input(type="text" placeholder="Insira o titulo..." name="title")
-					p
-							label Contexto
-							input.w3-input(type="text" placeholder="Insira o contexto do trabalho..." name="context")
+				if errors
+						each error in errors
+								div.w3-panel.w3-red
+										p #{ error }
+				form(method="post" enctype=isEditing ? "application/x-www-form-urlencoded" : "multipart/form-data")
+						p
+								label Title
+								input.w3-input(type="text" placeholder="Title of the package..." name="title" value=data.title)
 
-					p
-							label Autores
-							div#form-authors-list
-									div.w3-flex
-											div.w3-row-padding.w3-flex-grow
-												div.w3-quarter
-													input.w3-input(type="text" placeholder="Insira o nome do autor..." name="author")
-												div.w3-quarter
-													input.w3-input(type="text" placeholder="Insira o id do autor..." name="id")
-												div.w3-quarter
-													input.w3-input(type="text" placeholder="Insira o email do autor..." name="mail")
-												div.w3-quarter
-													input.w3-input(type="text" placeholder="Insira a UC do autor..." name="autUC")
-											div.w3-flex-fixed
-												a.w3-button.w3-grey.w3-hover-red.btn-authors-remove
-													i.fa.fa-minus
+						if !isEditing
+								p
+										label Contexto
+										input.w3-input(type="text" placeholder="Context of the package..." name="context" value=data.context)
 
-							div.w3-padding.w3-center
-									a.w3-button.w3-green#btn-authors-add
-											i.fa.fa-plus
-											|  Adicionar
+								mixin package-form-author( data )
+										div.w3-flex
+												div.w3-row-padding.w3-flex-grow
+														div.w3-quarter
+																input.w3-input(type="text" placeholder="Name of the author..." name="author_name" value=data.name)
+														div.w3-quarter
+																input.w3-input(type="text" placeholder="Identification code of the author..." name="author_id" value=data.id)
+														div.w3-quarter
+																input.w3-input(type="text" placeholder="Email of the author..." name="author_email" value=data.email)
+														div.w3-quarter
+																input.w3-input(type="text" placeholder="Curricular unit of the author..." name="author_course" value=data.course)
+												div.w3-flex-fixed
+																a.w3-button.w3-white.w3-hover-red.btn-authors-remove
+																		i.fa.fa-minus
+								p
+										label Authors
+										div#form-authors-list
+												each author in data.authors
+														+package-form-author( author )
+												else
+														+package-form-author( {} )
+										div.w3-padding.w3-center
+												a.w3-button.w3-green#btn-authors-add
+														i.fa.fa-plus
+														|  Add
 
-					p
-							label Supervisor
-							div#form-supervisors-list
-									div.w3-flex
-											div.w3-row-padding.w3-flex-grow
-												div.w3-half
-													input.w3-input(type="text" placeholder="Insira o nome do supervisor..." name="superv")
-												div.w3-half
-													input.w3-input(type="text" placeholder="Insira o email do supervisor..." name="MS")
-											div.w3-flex-fixed
-												a.w3-button.w3-grey.w3-hover-red.btn-supervisors-remove
-													i.fa.fa-minus
-							div.w3-padding.w3-center
-									a.w3-button.w3-green#btn-supervisors-add
-										i.fa.fa-plus
-										|  Adicionar
+								mixin package-form-supervisor( data )
+										div.w3-flex
+												div.w3-row-padding.w3-flex-grow
+														div.w3-half
+																input.w3-input(type="text" placeholder="Name of the supervisor..." name="supervisor_name" value=data.name)
+														div.w3-half
+																input.w3-input(type="text" placeholder="Email of the supervisor..." name="supervisor_email" value=data.email)
+												div.w3-flex-fixed
+																a.w3-button.w3-white.w3-hover-red.btn-supervisors-remove
+																		i.fa.fa-minus
 
-					p
-							label Keyword
-							div#form-keywords-list
-								div.w3-flex
-									div.w3-row-padding.w3-flex-grow
-										input.w3-input(type="text" placeholder="Insira keyword..." name="keyword")
-									div.w3-flex-fixed
-										a.w3-button.w3-grey.w3-hover-red.btn-keywords-remove
-											i.fa.fa-minus
-							div.w3-padding.w3-center
-									a.w3-button.w3-green#btn-keywords-add
-											i.fa.fa-plus
-											|  Adicionar
+								p
+										label Supervisors
+										div#form-supervisors-list
+													each supervisor in data.supervisors
+														+package-form-supervisor( supervisor )
+													else
+														+package-form-supervisor({})
+										div.w3-padding.w3-center
+												a.w3-button.w3-green#btn-authors-add
+														i.fa.fa-plus
+														|  Add
 
-					p
-							label Abstract
-							div#abstract( placeholder="Type a small abstract about the package..." )
+								mixin package-form-keyword(data)
+										div.w3-flex
+												input.w3-input.w3-flex-grow(type="text" placeholder="Keyword describing the package..." name="keyword" value=data)
+												div.w3-flex-fixed
+														a.w3-button.w3-white.w3-hover-red.btn-keywords-remove
+														i.fa.fa-minus
 
-					div.w3-padding( data-controller="folder" )
-							div.w3-flex
-								div.w3-flex-grow Folder
-									div.w3-flex-fixed
-										a.w3-button.w3-white.w3-hover-green( data-action="click->folder#addFolder" )
-											i.fa.fa-folder
-										a.w3-button.w3-white.w3-hover-green( data-action="click->folder#addFile" )
-											i.fa.fa-plus
-							div( data-target="folder.foldersList" )
-							div( data-target="folder.filesList" )
+								p
+										label Keywords
+										div#form-keywords-list
+												each keyword in data.keywords
+														+package-form-keyword(keyword)
+												else
+														+package-form-keyword("")
+										div.w3-padding.w3-center
+												a.w3-button.w3-green#btn-keywords-add
+														i.fa.fa-plus
+														|  Add
 
+						p
+								label Abstract
+								div#abstract( placeholder="Type a small abstract about the package..." data-value=data.abstract )
 
-					p Por favor selecione que visualização pretende dar ao ficheiro que está a criar
-					p
-							label Estado
-							select.w3-select(name="sort" style="margin-top: 8px; margin-bottom: 16px;")
-									option(value="public" selected=searchSort == 'public') Publico
-									option(value="private" selected=searchSort == 'private') Privado
+						if !isEditing
+								div.w3-padding( data-controller="folder" data-folder-dirname="" data-folder-basename="" data-folder-fullname="" )
+										div.w3-flex
+												span.w3-flex-grow Files
+												div.w3-flex-fixed
+														a.w3-button.w3-white.w3-hover-green.btn-folders-add( data-action="click->folder#addFolder" )
+																i.fa.fa-folder
+														a.w3-button.w3-white.w3-hover-green.btn-files-add( data-action="click->folder#addFile" )
+																i.fa.fa-plus
+										div( data-target="folder.foldersList" )
+										div( data-target="folder.filesList" )
 
-					p
-							input(type="submit" value="Submeter Ficheiro")
+						p
+								label Visibility
+								select.w3-select(name="visibility" style="margin-top: 8px; margin-bottom: 16px;")
+										option(value="public" selected=data.visibility == 'public') Public
+										option(value="private" selected=data.visibility == 'private') Private
+
+						p
+								input(type="submit" value="Create Package")

@@ -11,7 +11,7 @@ var format=require('date-fns');
 var index = require( './routes/index' );
 var users = require( './routes/users' );
 var logs = require( './routes/logs' );
-var packages = require( './routes/packages' );
+var { router: packages, routerApi: packagesApi } = require( './routes/packages' );
 var {
     Login
 } = require( './services/login' );
@@ -54,6 +54,7 @@ app.use( '/', index );
 app.use( '/users', users );
 app.use( '/logs', logs );
 app.use( '/packages', packages );
+app.use( '/api/packages', packagesApi );
 
 // catch 404 and forward to error handler
 app.use( function ( req, res, next ) {
