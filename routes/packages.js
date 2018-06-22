@@ -284,11 +284,7 @@ router.post( '/submit', allowGroups( [ 'producer', 'admin' ] ), upload.single( '
 										errors: validationErrors
 								} );
 						} else {
-							res.render( 'submit-received', {
-										name: req.body.name,
-										file: req.file.originalname,
-										package: package
-								} );
+							return res.redirect( '/packages/' + package.index );
 						}
 				} );
 		} );
@@ -513,7 +509,7 @@ router.post( '/create', allowGroups( [ 'producer', 'admin' ] ), upload.array( 'f
 
 const buildHtml = ( elem ) => {
 		if ( typeof elem === 'string' ) {
-				return elem.trim();
+				return ' ' + elem.trim() + ' ';
 		}
 
 		const attributes = Object.keys( elem.attributes || {} )
@@ -585,6 +581,8 @@ router.get( '/:id/approve', allowGroups( [ 'admin' ] ), ( req, res, next ) => {
 								}
 
 								const backUrl = req.header( 'Referer' ) || ( '/packages/' + package._id );
+
+								Logger.write("Package approved: " + package._id, req.user);
 
 								res.redirect( backUrl );
 						} );
@@ -666,6 +664,8 @@ router.get('/:id/remove',allowGroups( [ 'admin' ] ), ( req, res, next ) => {
 												return next( err );
 										}
 
+										Logger.write("Package removed: " + pck._id, req.user);
+
 										res.redirect( backUrl );
 								} );
 						} else {
@@ -673,6 +673,8 @@ router.get('/:id/remove',allowGroups( [ 'admin' ] ), ( req, res, next ) => {
 										if ( err ) {
 												return next( err );
 										}
+
+										Logger.write("Package removed: " + pck._id, req.user);
 
 										res.redirect( confirmBackUrl );
 								} );
@@ -713,6 +715,8 @@ router.get('/:id/recover/:state', allowGroups( [ 'admin' ] ), ( req, res, next )
 								if ( err ) {
 										return next( err );
 								}
+
+								Logger.write("Package " + pck._id + " recovered as " + pck.state, req.user);
 
 								res.redirect( backUrl );
 						} );
@@ -771,6 +775,8 @@ router.post( '/:id/edit', allowGroups( [ 'admin', 'producer' ] ), ( req, res, ne
             	if ( err ) {
                   	return next( err );
                 }
+
+								Logger.write("Package edited: " + package._id, req.user);
 
               	res.redirect( '/packages/' + package.index );
             } )

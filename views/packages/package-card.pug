@@ -5,6 +5,9 @@ mixin package-card ( pkg )
 					i.fa.fa-download
 		span.w3-bar-item.w3-text-grey.w3-xxxlarge
 			if pkg.approved
+				if pkg.state == 'deleted'
+					i.fa.fa-trash
+				else
 					i.fa.fa-globe
 			else
 					i.fa.fa-lock

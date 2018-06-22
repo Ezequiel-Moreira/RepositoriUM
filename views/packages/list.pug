@@ -2,55 +2,54 @@ extends ../layout
 include package-card
 
 block content
-    div.w3-left.w3-margin
-        a.w3-button.w3-green.w3-xlarge(href="/packages/submit")
-            i.fa.fa-upload
-            | Submeter Arquivo
+		div.w3-row-padding
+				div.w3-container.w3-col.m4.l3
+						if user && ( user.group == 'producer' || user.group == 'admin' )
+							div.w3-margin-bottom.w3-margin-top
+									a.w3-button.w3-green.w3-hover-light-green.w3-xlarge.w3-block(href="/packages/submit")
+											i.fa.fa-upload
+											|  Submit Archive
+							div.w3-margin-bottom
+									a.w3-button.w3-green.w3-hover-light-green.w3-xlarge.w3-block(href="/packages/create")
+											i.fa.fa-upload
+											|  Create Archive
+						form
+								label.w3-label.w3-large Procurar
+								input.w3-input.w3-border(type="text" name="search" placeholder="Pesquisar..." style="margin-top: 8px; margin-bottom: 16px;" value=searchQuery)
 
-    div.w3-left.w3-margin
-        a.w3-button.w3-green.w3-xlarge(href="/packages/create")
-            i.fa.fa-upload
-            | Criação assistida de arquivo
+								label.w3-label.w3-large Ordenar
+								select.w3-select(name="sort" style="margin-top: 8px; margin-bottom: 16px;")
+										option(value="title" selected=searchSort == 'title') Titulo
+										option(value="createdAt" selected=searchSort == 'createdAt') Data de Criação
+										option(value="aprovedAt" selected=searchSort == 'aprovedAt') Data de Aprovação
 
-    div.w3-row-padding
-        div.w3-container.w3-col.m4.l3
-            form
-                label.w3-label.w3-large Procurar
-                input.w3-input.w3-border(type="text" name="search" placeholder="Pesquisar..." style="margin-top: 8px; margin-bottom: 16px;" value=searchQuery)
+								label.w3-label.w3-large Acesso
+								p(style="margin-top: 0")
+										input.w3-check(type="checkbox" name="waiting" checked=searchWaiting)
+										label(style="margin-left: 8px;") Por Aprovar
+								p
+										input.w3-check(type="checkbox" name="approved" checked=searchApproved)
+										label(style="margin-left: 8px;") Aprovados
+								if user
+										p
+												input.w3-check(type="checkbox" name="mine" checked=searchMine)
+												label(style="margin-left: 8px;") Apenas Meus
 
-                label.w3-label.w3-large Ordenar
-                select.w3-select(name="sort" style="margin-top: 8px; margin-bottom: 16px;")
-                    option(value="title" selected=searchSort == 'title') Titulo
-                    option(value="createdAt" selected=searchSort == 'createdAt') Data de Criação
-                    option(value="aprovedAt" selected=searchSort == 'aprovedAt') Data de Aprovação
+								iinput.w3-button.w3-grey.w3-right(type="submit" value="Search")
 
-                label.w3-label.w3-large Acesso
-                p(style="margin-top: 0")
-                    input.w3-check(type="checkbox" name="waiting" checked=searchWaiting)
-                    label(style="margin-left: 8px;") Por Aprovar
-                p
-                    input.w3-check(type="checkbox" name="approved" checked=searchApproved)
-                    label(style="margin-left: 8px;") Aprovados
-                if user
-                    p
-                        input.w3-check(type="checkbox" name="mine" checked=searchMine)
-                        label(style="margin-left: 8px;") Apenas Meus
+				div.w3-container.w3-col.m8.l9
+						ul.w3-ul
+								each pkg in packages
+									+package-card( pkg )
 
-                input.w3-button.w3-grey.w3-right(type="submit" value="Procurar")
+		div.w3-clear
+				p
+						if hasPreviousPage
+								a.w3-button.w3-left.w3-orange( href="/packages?page=" + ( currentPage - 1 ) ) Previous Page
+						else
+								a.w3-button.w3-left.w3-disabled Previous Page
 
-        div.w3-container.w3-col.m8.l9
-            ul.w3-ul
-                each pkg in packages
-                  +package-card( pkg )
-
-    div.w3-clear
-        p
-            if hasPreviousPage
-                a.w3-button.w3-left.w3-orange( href="/packages?page=" + ( currentPage - 1 ) ) Página Anterior
-            else
-                a.w3-button.w3-left.w3-disabled Página Anterior
-
-            if hasNextPage
-                a.w3-button.w3-right.w3-orange( href="/packages?page=" + ( currentPage + 1 ) ) Página Seguinte
-            else
-                a.w3-button.w3-right.w3-disabled Página Seguinte
+						if hasNextPage
+								a.w3-button.w3-right.w3-orange( href="/packages?page=" + ( currentPage + 1 ) ) Next Page
+						else
+								a.w3-button.w3-right.w3-disabled Next Page
